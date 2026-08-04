@@ -105,14 +105,14 @@ namespace Platformer2D
         private int wallDirection = 1;
         private float wallTimer = 0f;
         private const float WallGraceTime = 0.12f;
-        private const float WallSlideSpeed = 120f;
+        private const float WallSlideSpeed = 80f;
         private const float WallJumpLaunchVelocity = -1000.0f;
         private const float WallJumpHorizontalVelocity = 2500.0f;
         private float wallJumpSameWallCooldown = 0f;
-        private const float WallJumpSameWallCooldownTime = 1f;
+        private const float WallJumpSameWallCooldownTime = 0.5f;
         private int lastWallJumpDirection = 0;
         private float wallJumpControlTimer = 0f;
-        private const float WallJumpControlTime = 0.15f;
+        private const float WallJumpControlTime = 0.2f;
         private const float WallJumpInputMultiplier = 0.25f;
 
         private Rectangle localBounds;
