@@ -7,9 +7,9 @@
 //-----------------------------------------------------------------------------
 #endregion
 
-using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Platformer2D
 {
@@ -23,9 +23,9 @@ namespace Platformer2D
     }
 
     /// <summary>
-    /// A monster who is impeding the progress of our fearless adventurer.
+    /// Abstract class for enemies that move and turn around
     /// </summary>
-    class Enemy
+    abstract class Enemy
     {
         public Level Level
         {
@@ -40,9 +40,25 @@ namespace Platformer2D
         {
             get { return position; }
         }
-        Vector2 position;
+        protected Vector2 position;
 
-        private Rectangle localBounds;
+        /// <summary>
+        /// The direction this enemy is facing and moving along the X axis.
+        /// </summary>
+        protected FaceDirection direction = FaceDirection.Left;
+
+        /// <summary>
+        /// How long this enemy has been waiting before turning around.
+        /// </summary>
+        protected float waitTime;
+
+        /// <summary>
+        /// How long to wait before turning around.
+        /// </summary>
+        protected const float MaxWaitTime = 0.5f;
+
+
+        protected Rectangle localBounds;
         /// <summary>
         /// Gets a rectangle which bounds this enemy in world space.
         /// </summary>
@@ -58,29 +74,14 @@ namespace Platformer2D
         }
 
         // Animations
-        private Animation runAnimation;
-        private Animation idleAnimation;
-        private AnimationPlayer sprite;
-
-        /// <summary>
-        /// The direction this enemy is facing and moving along the X axis.
-        /// </summary>
-        private FaceDirection direction = FaceDirection.Left;
-
-        /// <summary>
-        /// How long this enemy has been waiting before turning around.
-        /// </summary>
-        private float waitTime;
-
-        /// <summary>
-        /// How long to wait before turning around.
-        /// </summary>
-        private const float MaxWaitTime = 0.5f;
+        protected Animation runAnimation;
+        protected Animation idleAnimation;
+        protected AnimationPlayer sprite;
 
         /// <summary>
         /// The speed at which this enemy moves along the X axis.
         /// </summary>
-        private const float MoveSpeed = 64.0f;
+        protected const float MoveSpeed = 64.0f;
 
         /// <summary>
         /// Constructs a new Enemy.
@@ -112,46 +113,6 @@ namespace Platformer2D
             localBounds = new Rectangle(left, top, width, height);
         }
 
-
-        /// <summary>
-        /// Paces back and forth along a platform, waiting at either end.
-        /// </summary>
-        public void Update(GameTime gameTime)
-        {
-            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            // Calculate tile position based on the side we are walking towards.
-            float posX = Position.X + localBounds.Width / 2 * (int)direction;
-            int tileX = (int)Math.Floor(posX / Tile.Width) - (int)direction;
-            int tileY = (int)Math.Floor(Position.Y / Tile.Height);
-
-            if (waitTime > 0)
-            {
-                // Wait for some amount of time.
-                waitTime = Math.Max(0.0f, waitTime - (float)gameTime.ElapsedGameTime.TotalSeconds);
-                if (waitTime <= 0.0f)
-                {
-                    // Then turn around.
-                    direction = (FaceDirection)(-(int)direction);
-                }
-            }
-            else
-            {
-                // If we are about to run into a wall or off a cliff, start waiting.
-                if (Level.GetCollision(tileX + (int)direction, tileY - 1) == TileCollision.Impassable ||
-                    Level.GetCollision(tileX + (int)direction, tileY) == TileCollision.Passable)
-                {
-                    waitTime = MaxWaitTime;
-                }
-                else
-                {
-                    // Move in the current direction.
-                    Vector2 velocity = new Vector2((int)direction * MoveSpeed * elapsed, 0.0f);
-                    position = position + velocity;
-                }
-            }
-        }
-
         /// <summary>
         /// Draws the animated enemy.
         /// </summary>
@@ -175,5 +136,8 @@ namespace Platformer2D
             SpriteEffects flip = direction > 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             sprite.Draw(gameTime, spriteBatch, Position, flip);
         }
+
+        public abstract void Update(GameTime gameTime);
+
     }
 }

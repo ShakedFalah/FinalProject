@@ -148,7 +148,7 @@ namespace Platformer2D
                 {
                     // to load each tile.
                     char tileType = lines[y][x];
-                    tiles[x, y] = LoadTile(tileType, x, y);
+                    tiles[x, y] = LoadTile(tileType, x, y, lines);
                 }
             }
 
@@ -174,11 +174,21 @@ namespace Platformer2D
         /// The Y location of this tile in tile space.
         /// </param>
         /// <returns>The loaded tile.</returns>
-        private Tile LoadTile(char tileType, int x, int y)
+        private Tile LoadTile(char tileType, int x, int y, List<string> lines)
         {
             switch (tileType)
             {
                 // Blank space
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
                 case '.':
                     return new Tile(null, TileCollision.Passable);
 
@@ -196,13 +206,26 @@ namespace Platformer2D
 
                 // Various enemies
                 case 'A':
-                    return LoadEnemyTile(x, y, "MonsterA");
+                    return LoadWalkingEnemyTile(x, y, "MonsterA");
                 case 'B':
-                    return LoadEnemyTile(x, y, "MonsterB");
+                    {
+                        int flyUp = 0;
+                        int flyDown = 0;
+
+                        // Read digit directly above
+                        if (y > 0 && char.IsDigit(lines[y - 1][x]))
+                            flyUp = lines[y - 1][x] - '0';
+
+                        // Read digit directly below
+                        if (y < Height - 1 && char.IsDigit(lines[y + 1][x]))
+                            flyDown = lines[y + 1][x] - '0';
+
+                        return LoadVerticalFLyingEnemy(x, y, "MonsterB", flyUp, flyDown);
+                    }
                 case 'C':
-                    return LoadEnemyTile(x, y, "MonsterC");
+                    return LoadWalkingEnemyTile(x, y, "MonsterC");
                 case 'D':
-                    return LoadEnemyTile(x, y, "MonsterD");
+                    return LoadWalkingEnemyTile(x, y, "MonsterD");
 
                 // Platform block
                 case '~':
@@ -213,7 +236,7 @@ namespace Platformer2D
                     return LoadVarietyTile("BlockB", 2, TileCollision.Passable);
 
                 // Player 1 start point
-                case '1':
+                case 'P':
                     return LoadStartTile(x, y);
 
                 // Impassable block
@@ -290,10 +313,18 @@ namespace Platformer2D
         /// <summary>
         /// Instantiates an enemy and puts him in the level.
         /// </summary>
-        private Tile LoadEnemyTile(int x, int y, string spriteSet)
+        private Tile LoadWalkingEnemyTile(int x, int y, string spriteSet)
         {
             Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
-            enemies.Add(new Enemy(this, position, spriteSet));
+            enemies.Add(new WalkingEnemy(this, position, spriteSet));
+
+            return new Tile(null, TileCollision.Passable);
+        }
+
+        private Tile LoadVerticalFLyingEnemy(int x, int y, string spriteSet, int flyUp, int flyDown)
+        {
+            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            enemies.Add(new VerticalFlyingEnemy(this, position, spriteSet, flyUp, flyDown));
 
             return new Tile(null, TileCollision.Passable);
         }
