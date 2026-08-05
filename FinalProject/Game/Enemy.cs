@@ -47,17 +47,6 @@ namespace Platformer2D
         /// </summary>
         protected FaceDirection direction = FaceDirection.Left;
 
-        /// <summary>
-        /// How long this enemy has been waiting before turning around.
-        /// </summary>
-        protected float waitTime;
-
-        /// <summary>
-        /// How long to wait before turning around.
-        /// </summary>
-        protected const float MaxWaitTime = 0.5f;
-
-
         protected Rectangle localBounds;
         /// <summary>
         /// Gets a rectangle which bounds this enemy in world space.
@@ -75,7 +64,6 @@ namespace Platformer2D
 
         // Animations
         protected Animation runAnimation;
-        protected Animation idleAnimation;
         protected AnimationPlayer sprite;
 
         /// <summary>
@@ -97,19 +85,18 @@ namespace Platformer2D
         /// <summary>
         /// Loads a particular enemy sprite sheet and sounds.
         /// </summary>
-        public void LoadContent(string spriteSet)
+        public virtual void LoadContent(string spriteSet)
         {
             // Load animations.
             spriteSet = "Sprites/" + spriteSet + "/";
             runAnimation = new Animation(Level.Content.Load<Texture2D>(spriteSet + "Run"), 0.1f, true);
-            idleAnimation = new Animation(Level.Content.Load<Texture2D>(spriteSet + "Idle"), 0.15f, true);
-            sprite.PlayAnimation(idleAnimation);
+            sprite.PlayAnimation(runAnimation);
 
             // Calculate bounds within texture size.
-            int width = (int)(idleAnimation.FrameWidth * 0.35);
-            int left = (idleAnimation.FrameWidth - width) / 2;
-            int height = (int)(idleAnimation.FrameHeight * 0.7);
-            int top = idleAnimation.FrameHeight - height;
+            int width = (int)(runAnimation.FrameWidth * 0.35);
+            int left = (runAnimation.FrameWidth - width) / 2;
+            int height = (int)(runAnimation.FrameHeight * 0.7);
+            int top = runAnimation.FrameHeight - height;
             localBounds = new Rectangle(left, top, width, height);
         }
 
@@ -118,20 +105,6 @@ namespace Platformer2D
         /// </summary>
         public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
         {
-            // Stop running when the game is paused or before turning around.
-            if (!Level.Player.IsAlive ||
-                Level.ReachedExit ||
-                Level.TimeRemaining == TimeSpan.Zero ||
-                waitTime > 0)
-            {
-                sprite.PlayAnimation(idleAnimation);
-            }
-            else
-            {
-                sprite.PlayAnimation(runAnimation);
-            }
-
-
             // Draw facing the way the enemy is moving.
             SpriteEffects flip = direction > 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             sprite.Draw(gameTime, spriteBatch, Position, flip);

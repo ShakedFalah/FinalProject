@@ -223,7 +223,7 @@ namespace Platformer2D
                         return LoadVerticalFLyingEnemy(x, y, "MonsterB", flyUp, flyDown);
                     }
                 case 'C':
-                    return LoadWalkingEnemyTile(x, y, "MonsterC");
+                    return LoadJumpingEnemy(x, y, "MonsterC");
                 case 'D':
                     return LoadWalkingEnemyTile(x, y, "MonsterD");
 
@@ -325,6 +325,14 @@ namespace Platformer2D
         {
             Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
             enemies.Add(new VerticalFlyingEnemy(this, position, spriteSet, flyUp, flyDown));
+
+            return new Tile(null, TileCollision.Passable);
+        }
+
+        private Tile LoadJumpingEnemy(int x, int y, string spriteSet)
+        {
+            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            enemies.Add(new JumpingEnemy(this, position, spriteSet));
 
             return new Tile(null, TileCollision.Passable);
         }

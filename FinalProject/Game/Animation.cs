@@ -47,6 +47,7 @@ namespace Platformer2D
         public bool IsLooping
         {
             get { return isLooping; }
+            set {  isLooping = value; }
         }
         bool isLooping;
 

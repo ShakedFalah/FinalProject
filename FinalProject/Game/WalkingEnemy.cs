@@ -26,30 +26,17 @@ namespace Platformer2D
             int tileX = (int)Math.Floor(posX / Tile.Width) - (int)direction;
             int tileY = (int)Math.Floor(Position.Y / Tile.Height);
 
-            if (waitTime > 0)
+            // If we are about to run into a wall or off a cliff, start waiting.
+            if (Level.GetCollision(tileX + (int)direction, tileY - 1) == TileCollision.Impassable ||
+                Level.GetCollision(tileX + (int)direction, tileY) == TileCollision.Passable)
             {
-                // Wait for some amount of time.
-                waitTime = Math.Max(0.0f, waitTime - (float)gameTime.ElapsedGameTime.TotalSeconds);
-                if (waitTime <= 0.0f)
-                {
-                    // Then turn around.
-                    direction = (FaceDirection)(-(int)direction);
-                }
+                direction = (FaceDirection)(-(int)direction);
             }
             else
             {
-                // If we are about to run into a wall or off a cliff, start waiting.
-                if (Level.GetCollision(tileX + (int)direction, tileY - 1) == TileCollision.Impassable ||
-                    Level.GetCollision(tileX + (int)direction, tileY) == TileCollision.Passable)
-                {
-                    waitTime = MaxWaitTime;
-                }
-                else
-                {
-                    // Move in the current direction.
-                    Vector2 velocity = new Vector2((int)direction * MoveSpeed * elapsed, 0.0f);
-                    position = position + velocity;
-                }
+                // Move in the current direction.
+                Vector2 velocity = new Vector2((int)direction * MoveSpeed * elapsed, 0.0f);
+                position = position + velocity;
             }
         }
     }

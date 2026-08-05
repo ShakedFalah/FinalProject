@@ -233,18 +233,6 @@
 /processorParam:TextureFormat=Color
 /build:Sprites/Gem.png
 
-#begin Sprites/MonsterA/Idle.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Sprites/MonsterA/Idle.png
-
 #begin Sprites/MonsterA/Run.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -256,18 +244,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Sprites/MonsterA/Run.png
-
-#begin Sprites/MonsterB/Idle.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Sprites/MonsterB/Idle.png
 
 #begin Sprites/MonsterB/Run.png
 /importer:TextureImporter

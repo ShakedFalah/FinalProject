@@ -8,9 +8,6 @@ namespace Platformer2D
     /// </summary>
     internal class VerticalFlyingEnemy : Enemy
     {
-        /// <summary>
-        /// How much distance the enemy flies before turning around.
-        /// </summary>
         private readonly float startY;
         private readonly float upperLimit;
         private readonly float lowerLimit;
@@ -28,39 +25,24 @@ namespace Platformer2D
         {
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            if (waitTime > 0)
+            position.Y += (int)direction * MoveSpeed * elapsed;
+
+            if (direction == FaceDirection.Left) // Moving up
             {
-                // Wait for some amount of time.
-                waitTime = Math.Max(0.0f, waitTime - (float)gameTime.ElapsedGameTime.TotalSeconds);
-                if (waitTime <= 0.0f)
+                if (position.Y <= upperLimit)
                 {
-                    // Then turn around.
-                    direction = (FaceDirection)(-(int)direction);
+                    position.Y = upperLimit;
+                    direction = FaceDirection.Right;
                 }
             }
-            else
+            else // Moving down
             {
-                position.Y += (int)direction * MoveSpeed * elapsed;
-
-                if ((int)direction < 0) // Moving up
+                if (position.Y >= lowerLimit)
                 {
-                    if (position.Y <= upperLimit)
-                    {
-                        position.Y = upperLimit;
-                        waitTime = MaxWaitTime;
-                    }
+                    position.Y = lowerLimit;
+                    direction = FaceDirection.Left;
                 }
-                else // Moving down
-                {
-                    if (position.Y >= lowerLimit)
-                    {
-                        position.Y = lowerLimit;
-                        waitTime = MaxWaitTime;
-                    }
-                }
-
             }
-
         }
     }
 }

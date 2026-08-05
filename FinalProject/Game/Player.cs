@@ -98,7 +98,7 @@ namespace Platformer2D
 
         // Jumping state
         private bool isJumping;
-        private float jumpTime;
+        private float jumpTime = -1f;
 
         // Wall Jumping
         private bool isWallHugging = false;
@@ -306,7 +306,6 @@ namespace Platformer2D
             }
 
             velocity.Y = DoJump(velocity.Y, gameTime);
-            System.Diagnostics.Debug.WriteLine($"Velocity Y: {velocity.Y}");
 
             // Apply pseudo-drag horizontally.
             if (IsOnGround)
@@ -351,38 +350,59 @@ namespace Platformer2D
         /// </returns>
         private float DoJump(float velocityY, GameTime gameTime)
         {
-            // Only react when jump is pressed this frame
+            // Start a jump
             if (jumpPressed)
             {
                 if (IsOnGround)
                 {
-                    velocityY = JumpLaunchVelocity;
-                    jumpSound.Play();
+                    jumpTime = 0f;
 
+                    jumpSound.Play();
                     sprite.PlayAnimation(jumpAnimation);
-                    System.Diagnostics.Debug.WriteLine($"Normal Jump");
                 }
-                else if (isWallHugging && !(lastWallJumpDirection == wallDirection && wallJumpSameWallCooldown > 0))
+                else if (isWallHugging &&
+                         !(lastWallJumpDirection == wallDirection &&
+                           wallJumpSameWallCooldown > 0))
                 {
-                    // Push away from wall
+                    // Push away from the wall.
                     velocity.X = -wallDirection * WallJumpHorizontalVelocity;
+
                     lastWallJumpDirection = wallDirection;
-
-                    // Launch upward
-                    velocityY = WallJumpLaunchVelocity;
-
-                    jumpSound.Play();
-
-                    sprite.PlayAnimation(jumpAnimation);
-
                     wallJumpControlTimer = WallJumpControlTime;
 
-                    // Prevent instant re-grab
                     wallTimer = 0;
                     isWallHugging = false;
-
                     wallJumpSameWallCooldown = WallJumpSameWallCooldownTime;
+
+                    // Start the jump curve.
+                    jumpTime = 0f;
+
+                    jumpSound.Play();
+                    sprite.PlayAnimation(jumpAnimation);
                 }
+            }
+
+            // Continue the jump curve while the button is held.
+            if (isJumping)
+            {
+                if (jumpTime >= 0f && jumpTime < MaxJumpTime)
+                {
+                    jumpTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                    velocityY = JumpLaunchVelocity *
+                        (1.0f - (float)Math.Pow(
+                            jumpTime / MaxJumpTime,
+                            JumpControlPower));
+                }
+                else
+                {
+                    jumpTime = -1f;
+                }
+            }
+            else
+            {
+                // Releasing the button cuts the jump short.
+                jumpTime = -1f;
             }
 
             return velocityY;

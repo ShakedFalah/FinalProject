@@ -24,7 +24,7 @@ namespace Platformer2D
         private SoundEffect collectedSound;
 
         public readonly int PointValue = 30;
-        public readonly Color Color = Color.Yellow;
+        public readonly Color Color = Color.White;
 
         // The gem is animated from a base position along the Y axis.
         private Vector2 basePosition;
