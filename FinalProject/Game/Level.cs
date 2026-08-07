@@ -348,6 +348,17 @@ namespace Platformer2D
             return new Tile(null, TileCollision.Passable);
         }
 
+        public void AddEnemy(Enemy enemy)
+        {
+            enemies.Add(enemy);
+        }
+
+        public void RemoveEnemy(Enemy enemy)
+        {
+            enemies.Remove(enemy);
+        }
+
+
         /// <summary>
         /// Unloads the level content.
         /// </summary>

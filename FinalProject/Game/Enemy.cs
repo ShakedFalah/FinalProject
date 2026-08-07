@@ -69,7 +69,7 @@ namespace Platformer2D
         /// <summary>
         /// The speed at which this enemy moves along the X axis.
         /// </summary>
-        protected const float MoveSpeed = 64.0f;
+        protected virtual float MoveSpeed => 64.0f;
 
         /// <summary>
         /// Constructs a new Enemy.
