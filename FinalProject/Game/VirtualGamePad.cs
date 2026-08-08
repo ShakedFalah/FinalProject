@@ -52,7 +52,7 @@ namespace Platformer2D
         }
 
         /// <summary>
-        /// Generates a GamePadState based on the touch input provided (as applied to the on screen controls) and the gamepad state
+        /// Generates a GamePadState based on the touch input provided (as applied to the on-screen controls) and the gamepad state
         /// </summary>
         public GamePadState GetState(TouchCollection touchState, GamePadState gpState)
         {

@@ -1,13 +1,4 @@
-﻿#region File Description
-//-----------------------------------------------------------------------------
-// Enemy.cs
-//
-// Microsoft XNA Community Game Platform
-// Copyright (C) Microsoft Corporation. All rights reserved.
-//-----------------------------------------------------------------------------
-#endregion
-
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -25,22 +16,14 @@ namespace Platformer2D
     /// <summary>
     /// A monster who is impeding the progress of our fearless adventurer.
     /// </summary>
-    class Enemy
+    class Enemy : GameObject, IDrawable
     {
-        public Level Level
-        {
-            get { return level; }
-        }
-        Level level;
+        public Level Level { get; }
 
         /// <summary>
         /// Position in world space of the bottom center of this enemy.
         /// </summary>
-        public Vector2 Position
-        {
-            get { return position; }
-        }
-        Vector2 position;
+        public Vector2 Position { get; private set; }
 
         private Rectangle localBounds;
         /// <summary>
@@ -82,13 +65,17 @@ namespace Platformer2D
         /// </summary>
         private const float MoveSpeed = 64.0f;
 
+        public bool IsWalking => Level.Player.IsAlive &&
+                !Level.ReachedExit &&
+                Level.TimeRemaining > TimeSpan.Zero;
+
         /// <summary>
         /// Constructs a new Enemy.
         /// </summary>
         public Enemy(Level level, Vector2 position, string spriteSet)
         {
-            this.level = level;
-            this.position = position;
+            this.Level = level;
+            this.Position = position;
 
             LoadContent(spriteSet);
         }
@@ -116,12 +103,15 @@ namespace Platformer2D
         /// <summary>
         /// Paces back and forth along a platform, waiting at either end.
         /// </summary>
-        public void Update(GameTime gameTime)
+        public override void Update(GameTime gameTime)
         {
+            if (!IsWalking) return;
+
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             // Calculate tile position based on the side we are walking towards.
-            float posX = Position.X + localBounds.Width / 2 * (int)direction;
+            int offsetX = localBounds.Width / 2 * (int)direction;
+            float posX = Position.X + offsetX;
             int tileX = (int)Math.Floor(posX / Tile.Width) - (int)direction;
             int tileY = (int)Math.Floor(Position.Y / Tile.Height);
 
@@ -147,7 +137,7 @@ namespace Platformer2D
                 {
                     // Move in the current direction.
                     Vector2 velocity = new Vector2((int)direction * MoveSpeed * elapsed, 0.0f);
-                    position = position + velocity;
+                    Position += velocity;
                 }
             }
         }
@@ -155,13 +145,9 @@ namespace Platformer2D
         /// <summary>
         /// Draws the animated enemy.
         /// </summary>
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
-            // Stop running when the game is paused or before turning around.
-            if (!Level.Player.IsAlive ||
-                Level.ReachedExit ||
-                Level.TimeRemaining == TimeSpan.Zero ||
-                waitTime > 0)
+            if (!IsWalking || waitTime > 0)
             {
                 sprite.PlayAnimation(idleAnimation);
             }
