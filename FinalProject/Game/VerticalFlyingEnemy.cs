@@ -12,7 +12,8 @@ namespace Platformer2D
         private readonly float upperLimit;
         private readonly float lowerLimit;
 
-        public VerticalFlyingEnemy(Level level, Vector2 position, string spriteSet, int flyDistanceUp, int flyDistanceDown) : base(level, position, spriteSet)
+        public VerticalFlyingEnemy(Level level, Vector2 position, string spriteSet, int flyDistanceUp, int flyDistanceDown)
+        : base(level, position, spriteSet)
         {
             startY = position.Y;
             upperLimit = startY - flyDistanceUp * Tile.Height;

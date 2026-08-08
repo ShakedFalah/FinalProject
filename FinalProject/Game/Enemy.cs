@@ -23,7 +23,11 @@ namespace Platformer2D
         /// <summary>
         /// Position in world space of the bottom center of this enemy.
         /// </summary>
-        public Vector2 Position { get; private set; }
+        public Vector2 Position
+        {
+            get => position;
+        }
+        protected Vector2 position;
 
         /// <summary>
         /// The direction this enemy is facing and moving along the X axis.
@@ -48,6 +52,7 @@ namespace Platformer2D
         // Animations
         protected Animation runAnimation;
         protected AnimationPlayer sprite;
+        protected bool isAnimationLooping = true;
 
         /// <summary>
         /// The speed at which this enemy moves along the X axis.
@@ -61,10 +66,11 @@ namespace Platformer2D
         /// <summary>
         /// Constructs a new Enemy.
         /// </summary>
-        public Enemy(Level level, Vector2 position, string spriteSet)
+        public Enemy(Level level, Vector2 position, string spriteSet, bool isAnimationLooping = true)
         {
             this.Level = level;
-            this.Position = position;
+            this.position = position;
+            this.isAnimationLooping = isAnimationLooping;
 
             LoadContent(spriteSet);
         }
@@ -76,7 +82,7 @@ namespace Platformer2D
         {
             // Load animations.
             spriteSet = "Sprites/" + spriteSet + "/";
-            runAnimation = new Animation(Level.Content.Load<Texture2D>(spriteSet + "Run"), 0.1f, true);
+            runAnimation = new Animation(Level.Content.Load<Texture2D>(spriteSet + "Run"), 0.1f, isAnimationLooping);
             sprite.PlayAnimation(runAnimation);
 
             // Calculate bounds within texture size.

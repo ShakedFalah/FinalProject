@@ -14,9 +14,8 @@ namespace Platformer2D
         private Animation idleAnimation;
 
         public JumpingEnemy(Level level, Vector2 position, string spriteSet)
-            : base(level, position, spriteSet)
+            : base(level, position, spriteSet, false)
         {
-            runAnimation.IsLooping = false;
         }
 
         public override void LoadContent(string spriteSet)

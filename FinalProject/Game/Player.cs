@@ -91,6 +91,8 @@ namespace Platformer2D
         private float shootingCooldown = 0f;
         private float maxShootingCooldown = 1f;
 
+        private bool isCelebrating;
+
         private Rectangle localBounds;
         /// <summary>
         /// Gets a rectangle which bounds this player in world space.
@@ -153,18 +155,17 @@ namespace Platformer2D
 
             isWallHugging = wallTimer > 0 && !IsOnGround;
 
-            ApplyPhysics(gameTime);
-
             if (shootingCooldown > 0)
             {
                 shootingCooldown -= elapsed;
-            } else if (isShootPressed)
+            }
+            else if (isShootPressed)
             {
                 shootingCooldown = maxShootingCooldown;
                 Shoot();
             }
 
-            if (IsAlive && IsOnGround)
+            if (IsAlive && !isCelebrating)
             {
                 HandleInput();
 
@@ -472,6 +473,7 @@ namespace Platformer2D
         public void OnReachedExit()
         {
             sprite.PlayAnimation(celebrateAnimation);
+            isCelebrating = true;
         }
 
         /// <summary>
