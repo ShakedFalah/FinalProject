@@ -49,7 +49,8 @@ namespace Platformer2D
         private const float JumpLaunchVelocity = -3500.0f;
         private const float GravityAcceleration = 3400.0f;
         private const float MaxFallSpeed = 550.0f;
-        private const float JumpControlPower = 0.14f; 
+        private const float JumpControlPower = 0.14f;
+        private bool jumpPressed;
 
         // Input configuration
         private const float MoveStickScale = 1.0f;
@@ -68,11 +69,27 @@ namespace Platformer2D
 
         // Jumping state
         private bool isJumping;
-        private bool isCelebrating;
-        private bool wasJumping;
-        private float jumpTime;
-        private bool isWallHugging;
-        private int wallHuggingDirection = 1;
+        private float jumpTime = -1f;
+
+        // Wall Jumping
+        private bool isWallHugging = false;
+        private int wallDirection = 1;
+        private float wallTimer = 0f;
+        private const float WallGraceTime = 0.12f;
+        private const float WallSlideSpeed = 80f;
+        private const float WallJumpLaunchVelocity = -1000.0f;
+        private const float WallJumpHorizontalVelocity = 2500.0f;
+        private float wallJumpSameWallCooldown = 0f;
+        private const float WallJumpSameWallCooldownTime = 0.5f;
+        private int lastWallJumpDirection = 0;
+        private float wallJumpControlTimer = 0f;
+        private const float WallJumpControlTime = 0.2f;
+        private const float WallJumpInputMultiplier = 0.25f;
+
+        // Shooting
+        private bool isShootPressed = false;
+        private float shootingCooldown = 0f;
+        private float maxShootingCooldown = 1f;
 
         private Rectangle localBounds;
         /// <summary>
@@ -128,7 +145,26 @@ namespace Platformer2D
         public override void Update(GameTime gameTime)
         {
 
-            if (IsAlive && !isCelebrating)
+            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            wallTimer -= elapsed;
+
+            wallJumpSameWallCooldown -= elapsed;
+
+            isWallHugging = wallTimer > 0 && !IsOnGround;
+
+            ApplyPhysics(gameTime);
+
+            if (shootingCooldown > 0)
+            {
+                shootingCooldown -= elapsed;
+            } else if (isShootPressed)
+            {
+                shootingCooldown = maxShootingCooldown;
+                Shoot();
+            }
+
+            if (IsAlive && IsOnGround)
             {
                 HandleInput();
 
@@ -141,7 +177,6 @@ namespace Platformer2D
             ApplyPhysics(gameTime);
 
             movement = 0.0f;
-            isJumping = false;
         }
         
         private void HandleInput()
@@ -151,6 +186,7 @@ namespace Platformer2D
             AccelerometerState accelState = Accelerometer.GetState();
             
             movement = gamePadState.ThumbSticks.Left.X * MoveStickScale;
+            isShootPressed = false;
 
             // Ignore small movements to prevent running in place.
             if (Math.Abs(movement) < 0.5f)
@@ -174,16 +210,22 @@ namespace Platformer2D
                 movement = 1.0f;
             }
 
-            isJumping =
+            if (gamePadState.IsButtonDown(Buttons.X) ||
+                keyboardState.IsKeyDown(Keys.J) ||
+                keyboardState.IsKeyDown(Keys.F))
+            {
+                isShootPressed = true;
+            }
+
+            // Check if the player wants to jump.
+            bool jumpDown =
                 gamePadState.IsButtonDown(JumpButton) ||
                 keyboardState.IsKeyDown(Keys.Space) ||
                 keyboardState.IsKeyDown(Keys.Up) ||
                 keyboardState.IsKeyDown(Keys.W);
 
-            if (Math.Sign(movement) != wallHuggingDirection)
-            {
-                isWallHugging = false;
-            }
+            jumpPressed = jumpDown && !isJumping;
+            isJumping = jumpDown;
         }
 
         void ApplyPhysics(GameTime gameTime)
@@ -194,14 +236,24 @@ namespace Platformer2D
 
             // Base velocity is a combination of horizontal movement control and
             // acceleration downward due to gravity.
-            velocity.X += movement * MoveAcceleration * elapsed;
-            if (!isWallHugging)
+            float horizontalControl = movement;
+
+            if (wallJumpControlTimer > 0)
             {
-                velocity.Y = MathHelper.Clamp(velocity.Y + GravityAcceleration * elapsed, -MaxFallSpeed, MaxFallSpeed);
+                if (Math.Sign(movement) != Math.Sign(velocity.X) && movement != 0)
+                {
+                    horizontalControl *= WallJumpInputMultiplier;
+                }
+
+                wallJumpControlTimer -= elapsed;
             }
-            else
+
+            velocity.X += horizontalControl * MoveAcceleration * elapsed;
+            velocity.Y = MathHelper.Clamp(velocity.Y + GravityAcceleration * elapsed, -MaxFallSpeed, MaxFallSpeed);
+
+            if (isWallHugging && velocity.Y > WallSlideSpeed)
             {
-                velocity.Y = 0;
+                velocity.Y = WallSlideSpeed;
             }
 
             velocity.Y = DoJump(velocity.Y, gameTime);
@@ -249,42 +301,60 @@ namespace Platformer2D
         /// </returns>
         private float DoJump(float velocityY, GameTime gameTime)
         {
-            // If the player wants to jump
+            // Start a jump
+            if (jumpPressed)
+            {
+                if (IsOnGround)
+                {
+                    jumpTime = 0f;
+
+                    jumpSound.Play();
+                    sprite.PlayAnimation(jumpAnimation);
+                }
+                else if (isWallHugging &&
+                         !(lastWallJumpDirection == wallDirection &&
+                           wallJumpSameWallCooldown > 0))
+                {
+                    // Push away from the wall.
+                    velocity.X = -wallDirection * WallJumpHorizontalVelocity;
+
+                    lastWallJumpDirection = wallDirection;
+                    wallJumpControlTimer = WallJumpControlTime;
+
+                    wallTimer = 0;
+                    isWallHugging = false;
+                    wallJumpSameWallCooldown = WallJumpSameWallCooldownTime;
+
+                    // Start the jump curve.
+                    jumpTime = 0f;
+
+                    jumpSound.Play();
+                    sprite.PlayAnimation(jumpAnimation);
+                }
+            }
+
+            // Continue the jump curve while the button is held.
             if (isJumping)
             {
-                // Begin or continue a jump
-                if ((!wasJumping && IsOnGround) || isWallHugging || jumpTime > 0.0f)
+                if (jumpTime >= 0f && jumpTime < MaxJumpTime)
                 {
-                    if (jumpTime == 0.0f)
-                        jumpSound.Play();
-
                     jumpTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    sprite.PlayAnimation(jumpAnimation);
 
-                    if (isWallHugging)
-                    {
-                        velocity.X += -wallHuggingDirection * 2000;
-                    }
-                }
-
-                // If we are in the ascent of the jump
-                if (0.0f < jumpTime && jumpTime <= MaxJumpTime)
-                {
-                    // Fully override the vertical velocity with a power curve that gives players more control over the top of the jump
-                    velocityY = JumpLaunchVelocity * (1.0f - (float)Math.Pow(jumpTime / MaxJumpTime, JumpControlPower));
+                    velocityY = JumpLaunchVelocity *
+                        (1.0f - (float)Math.Pow(
+                            jumpTime / MaxJumpTime,
+                            JumpControlPower));
                 }
                 else
                 {
-                    // Reached the apex of the jump
-                    jumpTime = 0.0f;
+                    jumpTime = -1f;
                 }
             }
             else
             {
-                // Continues not jumping or cancels a jump in progress
-                jumpTime = 0.0f;
+                // Releasing the button cuts the jump short.
+                jumpTime = -1f;
             }
-            wasJumping = isJumping;
 
             return velocityY;
         }
@@ -302,8 +372,7 @@ namespace Platformer2D
             int leftTile = (int)Math.Floor((float)bounds.Left / Tile.Width);
             int rightTile = (int)Math.Ceiling((float)bounds.Right / Tile.Width) - 1;
             int topTile = (int)Math.Floor((float)bounds.Top / Tile.Height);
-            int bottomTile = (int)Math.Ceiling((float)bounds.Bottom / Tile.Height) - 1;
-            isWallHugging = false;
+            int bottomTile = (int)Math.Ceiling(((float)bounds.Bottom / Tile.Height)) - 1;
             // Reset flag to search for ground collision.
             IsOnGround = false;
 
@@ -329,7 +398,9 @@ namespace Platformer2D
                             {
                                 // If we crossed the top of a tile, we are on the ground.
                                 if (previousBottom <= tileBounds.Top)
+                                {
                                     IsOnGround = true;
+                                }
 
                                 // Ignore platforms, unless we are on the ground.
                                 if (collision == TileCollision.Impassable || IsOnGround)
@@ -346,18 +417,35 @@ namespace Platformer2D
                                 // Resolve the collision along the X axis.
                                 Position = new Vector2(Position.X + depth.X, Position.Y);
 
-                                if (!IsOnGround && movement * depth.X < 0)
+                                if (!IsOnGround)
                                 {
-                                    isWallHugging = true;
-                                    wallHuggingDirection = Math.Sign(movement);
-                                }
+                                    // Determine wall side
+                                    if (depth.X < 0)
+                                    {
+                                        // Wall is on the right
+                                        wallDirection = 1;
+                                    }
+                                    else
+                                    {
+                                        // Wall is on the left
+                                        wallDirection = -1;
+                                    }
 
+                                    wallTimer = WallGraceTime;
+                                    isWallHugging = true;
+                                }
                                 // Perform further collisions with the new bounds.
                                 bounds = BoundingRectangle;
                             }
                         }
                     }
                 }
+            }
+
+            if (IsOnGround)
+            {
+                isWallHugging = false;
+                wallTimer = 0;
             }
 
             // Save the new bounds bottom.
@@ -384,7 +472,6 @@ namespace Platformer2D
         public void OnReachedExit()
         {
             sprite.PlayAnimation(celebrateAnimation);
-            isCelebrating = true;
         }
 
         /// <summary>
@@ -400,6 +487,16 @@ namespace Platformer2D
 
             // Draw that sprite.
             sprite.Draw(gameTime, spriteBatch, Position, flip);
+        }
+
+        public void Shoot()
+        {
+            FaceDirection direction = flip != SpriteEffects.FlipHorizontally ? FaceDirection.Left : FaceDirection.Right;
+            Vector2 spawnPosition =
+                Position + new Vector2((int)direction * Tile.Width * 0.5f, 0 - (BoundingRectangle.Height / 2));
+
+            Level.AddPlayerProjectile(
+                new Projectile(Level, spawnPosition, "Bullet", direction, true));
         }
     }
 }

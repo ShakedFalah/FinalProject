@@ -14,9 +14,9 @@ namespace Platformer2D
     }
 
     /// <summary>
-    /// A monster who is impeding the progress of our fearless adventurer.
+    /// Abstract class for enemies that move and turn around
     /// </summary>
-    class Enemy : GameObject, IDrawable
+    abstract class Enemy : GameObject, IDrawable
     {
         public Level Level { get; }
 
@@ -25,7 +25,12 @@ namespace Platformer2D
         /// </summary>
         public Vector2 Position { get; private set; }
 
-        private Rectangle localBounds;
+        /// <summary>
+        /// The direction this enemy is facing and moving along the X axis.
+        /// </summary>
+        protected FaceDirection direction = FaceDirection.Left;
+
+        protected Rectangle localBounds;
         /// <summary>
         /// Gets a rectangle which bounds this enemy in world space.
         /// </summary>
@@ -41,29 +46,13 @@ namespace Platformer2D
         }
 
         // Animations
-        private Animation runAnimation;
-        private Animation idleAnimation;
-        private AnimationPlayer sprite;
-
-        /// <summary>
-        /// The direction this enemy is facing and moving along the X axis.
-        /// </summary>
-        private FaceDirection direction = FaceDirection.Left;
-
-        /// <summary>
-        /// How long this enemy has been waiting before turning around.
-        /// </summary>
-        private float waitTime;
-
-        /// <summary>
-        /// How long to wait before turning around.
-        /// </summary>
-        private const float MaxWaitTime = 0.5f;
+        protected Animation runAnimation;
+        protected AnimationPlayer sprite;
 
         /// <summary>
         /// The speed at which this enemy moves along the X axis.
         /// </summary>
-        private const float MoveSpeed = 64.0f;
+        protected virtual float MoveSpeed => 64.0f;
 
         public bool IsWalking => Level.Player.IsAlive &&
                 !Level.ReachedExit &&
@@ -83,80 +72,26 @@ namespace Platformer2D
         /// <summary>
         /// Loads a particular enemy sprite sheet and sounds.
         /// </summary>
-        public void LoadContent(string spriteSet)
+        public virtual void LoadContent(string spriteSet)
         {
             // Load animations.
             spriteSet = "Sprites/" + spriteSet + "/";
             runAnimation = new Animation(Level.Content.Load<Texture2D>(spriteSet + "Run"), 0.1f, true);
-            idleAnimation = new Animation(Level.Content.Load<Texture2D>(spriteSet + "Idle"), 0.15f, true);
-            sprite.PlayAnimation(idleAnimation);
+            sprite.PlayAnimation(runAnimation);
 
             // Calculate bounds within texture size.
-            int width = (int)(idleAnimation.FrameWidth * 0.35);
-            int left = (idleAnimation.FrameWidth - width) / 2;
-            int height = (int)(idleAnimation.FrameHeight * 0.7);
-            int top = idleAnimation.FrameHeight - height;
+            int width = (int)(runAnimation.FrameWidth * 0.35);
+            int left = (runAnimation.FrameWidth - width) / 2;
+            int height = (int)(runAnimation.FrameHeight * 0.7);
+            int top = runAnimation.FrameHeight - height;
             localBounds = new Rectangle(left, top, width, height);
-        }
-
-
-        /// <summary>
-        /// Paces back and forth along a platform, waiting at either end.
-        /// </summary>
-        public override void Update(GameTime gameTime)
-        {
-            if (!IsWalking) return;
-
-            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            // Calculate tile position based on the side we are walking towards.
-            int offsetX = localBounds.Width / 2 * (int)direction;
-            float posX = Position.X + offsetX;
-            int tileX = (int)Math.Floor(posX / Tile.Width) - (int)direction;
-            int tileY = (int)Math.Floor(Position.Y / Tile.Height);
-
-            if (waitTime > 0)
-            {
-                // Wait for some amount of time.
-                waitTime = Math.Max(0.0f, waitTime - (float)gameTime.ElapsedGameTime.TotalSeconds);
-                if (waitTime <= 0.0f)
-                {
-                    // Then turn around.
-                    direction = (FaceDirection)(-(int)direction);
-                }
-            }
-            else
-            {
-                // If we are about to run into a wall or off a cliff, start waiting.
-                if (Level.GetCollision(tileX + (int)direction, tileY - 1) == TileCollision.Impassable ||
-                    Level.GetCollision(tileX + (int)direction, tileY) == TileCollision.Passable)
-                {
-                    waitTime = MaxWaitTime;
-                }
-                else
-                {
-                    // Move in the current direction.
-                    Vector2 velocity = new Vector2((int)direction * MoveSpeed * elapsed, 0.0f);
-                    Position += velocity;
-                }
-            }
         }
 
         /// <summary>
         /// Draws the animated enemy.
         /// </summary>
-        public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
+        public virtual void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
-            if (!IsWalking || waitTime > 0)
-            {
-                sprite.PlayAnimation(idleAnimation);
-            }
-            else
-            {
-                sprite.PlayAnimation(runAnimation);
-            }
-
-
             // Draw facing the way the enemy is moving.
             SpriteEffects flip = direction > 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             sprite.Draw(gameTime, spriteBatch, Position, flip);

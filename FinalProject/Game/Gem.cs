@@ -21,7 +21,7 @@ namespace Platformer2D
         private SoundEffect collectedSound;
 
         public readonly int PointValue = 30;
-        public readonly Color Color = Color.Yellow;
+        public readonly Color Color = Color.White;
 
         private readonly Vector2 basePosition;
         private float bounce;

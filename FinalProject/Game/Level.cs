@@ -33,8 +33,10 @@ namespace Platformer2D
         // Entities in the level.
         public Player Player { get; private set; }
 
-        private readonly List<Gem> gems = new();
-        private readonly List<Enemy> enemies = new();
+        private List<Gem> gems = new List<Gem>();
+        private List<Enemy> enemies = new List<Enemy>();
+        private List<Projectile> enemyProjectiles = new List<Projectile>();
+        private List<Projectile> playerProjectiles = new List<Projectile>();
 
         // Key locations in the level.
         private static readonly Point InvalidPosition = new(-1, -1);
@@ -71,10 +73,10 @@ namespace Platformer2D
             // Load background layer textures. For now, all levels must
             // use the same backgrounds and only use the left-most part of them.
             layers = new Texture2D[3];
+            int segmentIndex = levelIndex;
             for (int i = 0; i < layers.Length; ++i)
             {
                 // Choose a random segment if each background layer for level variety.
-                int segmentIndex = levelIndex;
                 layers[i] = Content.Load<Texture2D>("Backgrounds/Layer" + i + "_" + segmentIndex);
             }
 
@@ -118,7 +120,7 @@ namespace Platformer2D
                 {
                     // to load each tile.
                     char tileType = lines[y][x];
-                    tiles[x, y] = LoadTile(tileType, x, y);
+                    tiles[x, y] = LoadTile(tileType, x, y, lines);
                 }
             }
 
@@ -130,11 +132,21 @@ namespace Platformer2D
 
         }
 
-        private Tile LoadTile(char tileType, int x, int y)
+        private Tile LoadTile(char tileType, int x, int y, List<string> lines)
         {
             switch (tileType)
             {
                 // Blank space
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
                 case '.':
                     return new Tile(null, TileCollision.Passable);
 
@@ -152,13 +164,26 @@ namespace Platformer2D
 
                 // Various enemies
                 case 'A':
-                    return LoadEnemyTile(x, y, "MonsterA");
+                    return LoadWalkingEnemyTile(x, y, "MonsterA");
                 case 'B':
-                    return LoadEnemyTile(x, y, "MonsterB");
+                    {
+                        int flyUp = 0;
+                        int flyDown = 0;
+
+                        // Read digit directly above
+                        if (y > 0 && char.IsDigit(lines[y - 1][x]))
+                            flyUp = lines[y - 1][x] - '0';
+
+                        // Read digit directly below
+                        if (y < Height - 1 && char.IsDigit(lines[y + 1][x]))
+                            flyDown = lines[y + 1][x] - '0';
+
+                        return LoadVerticalFLyingEnemy(x, y, "MonsterB", flyUp, flyDown);
+                    }
                 case 'C':
-                    return LoadEnemyTile(x, y, "MonsterC");
+                    return LoadJumpingEnemy(x, y, "MonsterC");
                 case 'D':
-                    return LoadEnemyTile(x, y, "MonsterD");
+                    return LoadShootingEnemyTile(x, y, "MonsterA");
 
                 // Platform block
                 case '~':
@@ -169,7 +194,7 @@ namespace Platformer2D
                     return LoadVarietyTile("BlockB", 2, TileCollision.Passable);
 
                 // Player 1 start point
-                case '1':
+                case 'P':
                     return LoadStartTile(x, y);
 
                 // Impassable block
@@ -224,13 +249,38 @@ namespace Platformer2D
         /// <summary>
         /// Instantiates an enemy and puts him in the level.
         /// </summary>
-        private Tile LoadEnemyTile(int x, int y, string spriteSet)
+        private Tile LoadWalkingEnemyTile(int x, int y, string spriteSet)
         {
-            Vector2 position = GetBounds(x, y).GetBottomCenter();
-            enemies.Add(new Enemy(this, position, spriteSet));
+            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            enemies.Add(new WalkingEnemy(this, position, spriteSet));
 
             return new Tile(null, TileCollision.Passable);
         }
+
+        private Tile LoadVerticalFLyingEnemy(int x, int y, string spriteSet, int flyUp, int flyDown)
+        {
+            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            enemies.Add(new VerticalFlyingEnemy(this, position, spriteSet, flyUp, flyDown));
+
+            return new Tile(null, TileCollision.Passable);
+        }
+
+        private Tile LoadJumpingEnemy(int x, int y, string spriteSet)
+        {
+            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            enemies.Add(new JumpingEnemy(this, position, spriteSet));
+
+            return new Tile(null, TileCollision.Passable);
+        }
+
+        private Tile LoadShootingEnemyTile(int x, int y, string spriteSet)
+        {
+            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            enemies.Add(new ShootingEnemy(this, position, spriteSet));
+
+            return new Tile(null, TileCollision.Passable);
+        }
+
 
         /// <summary>
         /// Instantiates a gem and puts it in the level.
@@ -242,6 +292,33 @@ namespace Platformer2D
 
             return new Tile(null, TileCollision.Passable);
         }
+
+        public void AddEnemyProjectile(Projectile bullet)
+        {
+            enemyProjectiles.Add(bullet);
+        }
+
+        internal void AddPlayerProjectile(Projectile projectile)
+        {
+            playerProjectiles.Add(projectile);
+        }
+
+        public void RemoveEnemyProjectile(Projectile bullet)
+        {
+            enemyProjectiles.Remove(bullet);
+        }
+
+        public void RemovePlayerProjectile(Projectile bullet)
+        {
+            playerProjectiles.Remove(bullet);
+        }
+
+        public void RemoveEnemy(Enemy enemy)
+        {
+            enemies.Remove(enemy);
+        }
+
+
 
         /// <summary>
         /// Unloads the level content.
@@ -359,6 +436,34 @@ namespace Platformer2D
                 exitReachedSound.Play();
                 ReachedExit = true;
             }
+
+            for (int i = 0; i < enemyProjectiles.Count; i++)
+            {
+                Projectile projectile = enemyProjectiles[i];
+
+                if (projectile.BoundingRectangle.Intersects(Player.BoundingRectangle))
+                {
+                    Player.OnKilled(projectile);
+                }
+            }
+
+            for (int i = 0; i < playerProjectiles.Count; i++)
+            {
+                Projectile projectile = playerProjectiles[i];
+
+                for (int j = 0; j < enemies.Count; j++)
+                {
+                    Enemy enemy = enemies[j];
+                    if (projectile.BoundingRectangle.Intersects(enemy.BoundingRectangle))
+                    {
+                        playerProjectiles.RemoveAt(i);
+                        enemies.RemoveAt(j);
+                        i--;
+                        break;
+                    }
+                }
+            }
+
         }
 
         /// <summary>
@@ -408,7 +513,6 @@ namespace Platformer2D
                 }
             }
         }
-
         #endregion
     }
 }
