@@ -81,10 +81,10 @@ namespace Platformer2D
         private void Shoot()
         {
             Vector2 spawnPosition =
-                Position + new Vector2((int)direction * Tile.Width * 0.5f, 0);
+                Position + new Vector2((int)direction * Tile.Width * 0.5f, 0 - (BoundingRectangle.Height / 2));
 
-            Level.AddEnemy(
-                new EnemyBullet(Level, spawnPosition, "Bullet", direction));
+            Level.AddEnemyProjectile(
+                new Projectile(Level, spawnPosition, "Bullet", direction));
         }
     }
 }

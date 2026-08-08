@@ -40,6 +40,8 @@ namespace Platformer2D
 
         private List<Gem> gems = new List<Gem>();
         private List<Enemy> enemies = new List<Enemy>();
+        private List<Projectile> enemyProjectiles = new List<Projectile>();
+        private List<Projectile> playerProjectiles = new List<Projectile>();
 
         // Key locations in the level.        
         private Vector2 start;
@@ -225,7 +227,7 @@ namespace Platformer2D
                 case 'C':
                     return LoadJumpingEnemy(x, y, "MonsterC");
                 case 'D':
-                    return LoadWalkingEnemyTile(x, y, "MonsterD");
+                    return LoadShootingEnemyTile(x, y, "MonsterA");
 
                 // Platform block
                 case '~':
@@ -337,6 +339,15 @@ namespace Platformer2D
             return new Tile(null, TileCollision.Passable);
         }
 
+        private Tile LoadShootingEnemyTile(int x, int y, string spriteSet)
+        {
+            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            enemies.Add(new ShootingEnemy(this, position, spriteSet));
+
+            return new Tile(null, TileCollision.Passable);
+        }
+
+
         /// <summary>
         /// Instantiates a gem and puts it in the level.
         /// </summary>
@@ -348,15 +359,31 @@ namespace Platformer2D
             return new Tile(null, TileCollision.Passable);
         }
 
-        public void AddEnemy(Enemy enemy)
+        public void AddEnemyProjectile(Projectile bullet)
         {
-            enemies.Add(enemy);
+            enemyProjectiles.Add(bullet);
+        }
+
+        internal void AddPlayerProjectile(Projectile projectile)
+        {
+            playerProjectiles.Add(projectile);
+        }
+
+        public void RemoveEnemyProjectile(Projectile bullet)
+        {
+            enemyProjectiles.Remove(bullet);
+        }
+
+        public void RemovePlayerProjectile(Projectile bullet)
+        {
+            playerProjectiles.Remove(bullet);
         }
 
         public void RemoveEnemy(Enemy enemy)
         {
             enemies.Remove(enemy);
         }
+
 
 
         /// <summary>
@@ -504,6 +531,36 @@ namespace Platformer2D
                     OnPlayerKilled(enemy);
                 }
             }
+
+            for (int i = 0; i < enemyProjectiles.Count; i++)
+            {
+                Projectile projectile = enemyProjectiles[i];
+                projectile.Update(gameTime);
+
+                if (projectile.BoundingRectangle.Intersects(Player.BoundingRectangle))
+                {
+                    OnPlayerKilled(projectile);
+                }
+            }
+
+            for (int i = 0; i < playerProjectiles.Count; i++)
+            {
+                Projectile projectile = playerProjectiles[i];
+                projectile.Update(gameTime);
+
+                for (int j = 0; j < enemies.Count; j++)
+                {
+                    Enemy enemy = enemies[j];
+                    if (projectile.BoundingRectangle.Intersects(enemy.BoundingRectangle))
+                    {
+                        playerProjectiles.RemoveAt(i);
+                        enemies.RemoveAt(j);
+                        i--;
+                        break;
+                    }
+                }
+            }
+
         }
 
         /// <summary>
@@ -570,6 +627,12 @@ namespace Platformer2D
             foreach (Enemy enemy in enemies)
                 enemy.Draw(gameTime, spriteBatch);
 
+            foreach (Projectile projectile in enemyProjectiles)
+                projectile.Draw(gameTime, spriteBatch);
+
+            foreach (Projectile projectile in playerProjectiles)
+                projectile.Draw(gameTime, spriteBatch);
+
             for (int i = EntityLayer + 1; i < layers.Length; ++i)
                 spriteBatch.Draw(layers[i], Vector2.Zero, Color.White);
         }
@@ -595,7 +658,6 @@ namespace Platformer2D
                 }
             }
         }
-
         #endregion
     }
 }

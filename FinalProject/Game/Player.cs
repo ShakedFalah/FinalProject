@@ -115,6 +115,11 @@ namespace Platformer2D
         private const float WallJumpControlTime = 0.2f;
         private const float WallJumpInputMultiplier = 0.25f;
 
+        // Shooting
+        private bool isShootPressed = false;
+        private float shootingCooldown = 0f;
+        private float maxShootingCooldown = 1f;
+
         private Rectangle localBounds;
         /// <summary>
         /// Gets a rectangle which bounds this player in world space.
@@ -206,6 +211,15 @@ namespace Platformer2D
 
             ApplyPhysics(gameTime);
 
+            if (shootingCooldown > 0)
+            {
+                shootingCooldown -= elapsed;
+            } else if (isShootPressed)
+            {
+                shootingCooldown = maxShootingCooldown;
+                Shoot();
+            }
+
             if (IsAlive && IsOnGround)
             {
                 if (Math.Abs(Velocity.X) - 0.02f > 0)
@@ -233,6 +247,7 @@ namespace Platformer2D
         {
             // Get analog horizontal movement.
             movement = gamePadState.ThumbSticks.Left.X * MoveStickScale;
+            isShootPressed = false;
 
             // Ignore small movements to prevent running in place.
             if (Math.Abs(movement) < 0.5f)
@@ -261,6 +276,13 @@ namespace Platformer2D
                      keyboardState.IsKeyDown(Keys.D))
             {
                 movement = 1.0f;
+            }
+
+            if (gamePadState.IsButtonDown(Buttons.X) ||
+                keyboardState.IsKeyDown(Keys.J) ||
+                keyboardState.IsKeyDown(Keys.F))
+            {
+                isShootPressed = true;
             }
 
             // Check if the player wants to jump.
@@ -541,6 +563,16 @@ namespace Platformer2D
 
             // Draw that sprite.
             sprite.Draw(gameTime, spriteBatch, Position, flip);
+        }
+
+        public void Shoot()
+        {
+            FaceDirection direction = flip != SpriteEffects.FlipHorizontally ? FaceDirection.Left : FaceDirection.Right;
+            Vector2 spawnPosition =
+                Position + new Vector2((int)direction * Tile.Width * 0.5f, 0 - (BoundingRectangle.Height / 2));
+
+            Level.AddPlayerProjectile(
+                new Projectile(Level, spawnPosition, "Bullet", direction, true));
         }
     }
 }
