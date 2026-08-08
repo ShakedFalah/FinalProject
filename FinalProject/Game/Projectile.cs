@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Platformer2D
 {
@@ -25,10 +24,12 @@ namespace Platformer2D
                 if (isPlayerProjectile)
                 {
                     Level.RemovePlayerProjectile(this);
-                } else
+                }
+                else
                 {
                     Level.RemoveEnemyProjectile(this);
                 }
+                Destroy();
             }
         }
     }

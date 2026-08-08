@@ -77,7 +77,6 @@ namespace Platformer2D
         private float wallTimer = 0f;
         private const float WallGraceTime = 0.12f;
         private const float WallSlideSpeed = 80f;
-        private const float WallJumpLaunchVelocity = -1000.0f;
         private const float WallJumpHorizontalVelocity = 2500.0f;
         private float wallJumpSameWallCooldown = 0f;
         private const float WallJumpSameWallCooldownTime = 0.5f;
@@ -89,7 +88,7 @@ namespace Platformer2D
         // Shooting
         private bool isShootPressed = false;
         private float shootingCooldown = 0f;
-        private float maxShootingCooldown = 1f;
+        private const float MaxShootingCooldown = 1f;
 
         private bool isCelebrating;
 
@@ -141,6 +140,7 @@ namespace Platformer2D
             Position = position;
             Velocity = Vector2.Zero;
             IsAlive = true;
+            isCelebrating = false;
             sprite.PlayAnimation(idleAnimation);
         }
 
@@ -161,7 +161,7 @@ namespace Platformer2D
             }
             else if (isShootPressed)
             {
-                shootingCooldown = maxShootingCooldown;
+                shootingCooldown = MaxShootingCooldown;
                 Shoot();
             }
 
@@ -221,9 +221,7 @@ namespace Platformer2D
             // Check if the player wants to jump.
             bool jumpDown =
                 gamePadState.IsButtonDown(JumpButton) ||
-                keyboardState.IsKeyDown(Keys.Space) ||
-                keyboardState.IsKeyDown(Keys.Up) ||
-                keyboardState.IsKeyDown(Keys.W);
+                keyboardState.IsKeyDown(Keys.Space);
 
             jumpPressed = jumpDown && !isJumping;
             isJumping = jumpDown;
@@ -283,23 +281,6 @@ namespace Platformer2D
                 velocity.Y = 0;
         }
 
-        /// <summary>
-        /// Calculates the Y velocity accounting for jumping and
-        /// animates accordingly.
-        /// </summary>
-        /// <remarks>
-        /// During the accent of a jump, the Y velocity is completely
-        /// overridden by a power curve. During the decent, gravity takes
-        /// over. The jump velocity is controlled by the jumpTime field
-        /// which measures time into the accent of the current jump.
-        /// </remarks>
-        /// <param name="velocityY">
-        /// The player's current velocity along the Y axis.
-        /// </param>
-        /// <returns>
-        /// A new Y velocity if beginning or continuing a jump.
-        /// Otherwise, the existing Y velocity.
-        /// </returns>
         private float DoJump(float velocityY, GameTime gameTime)
         {
             // Start a jump

@@ -1,13 +1,4 @@
-﻿#region File Description
-//-----------------------------------------------------------------------------
-// Level.cs
-//
-// Microsoft XNA Community Game Platform
-// Copyright (C) Microsoft Corporation. All rights reserved.
-//-----------------------------------------------------------------------------
-#endregion
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -178,7 +169,7 @@ namespace Platformer2D
                         if (y < Height - 1 && char.IsDigit(lines[y + 1][x]))
                             flyDown = lines[y + 1][x] - '0';
 
-                        return LoadVerticalFLyingEnemy(x, y, "MonsterB", flyUp, flyDown);
+                        return LoadVerticalFlyingEnemy(x, y, "MonsterB", flyUp, flyDown);
                     }
                 case 'C':
                     return LoadJumpingEnemy(x, y, "MonsterC");
@@ -251,15 +242,15 @@ namespace Platformer2D
         /// </summary>
         private Tile LoadWalkingEnemyTile(int x, int y, string spriteSet)
         {
-            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            Vector2 position = GetBounds(x, y).GetBottomCenter();
             enemies.Add(new WalkingEnemy(this, position, spriteSet));
 
             return new Tile(null, TileCollision.Passable);
         }
 
-        private Tile LoadVerticalFLyingEnemy(int x, int y, string spriteSet, int flyUp, int flyDown)
+        private Tile LoadVerticalFlyingEnemy(int x, int y, string spriteSet, int flyUp, int flyDown)
         {
-            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            Vector2 position = GetBounds(x, y).GetBottomCenter();
             enemies.Add(new VerticalFlyingEnemy(this, position, spriteSet, flyUp, flyDown));
 
             return new Tile(null, TileCollision.Passable);
@@ -267,7 +258,7 @@ namespace Platformer2D
 
         private Tile LoadJumpingEnemy(int x, int y, string spriteSet)
         {
-            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            Vector2 position = GetBounds(x, y).GetBottomCenter();
             enemies.Add(new JumpingEnemy(this, position, spriteSet));
 
             return new Tile(null, TileCollision.Passable);
@@ -275,7 +266,7 @@ namespace Platformer2D
 
         private Tile LoadShootingEnemyTile(int x, int y, string spriteSet)
         {
-            Vector2 position = RectangleExtensions.GetBottomCenter(GetBounds(x, y));
+            Vector2 position = GetBounds(x, y).GetBottomCenter();
             enemies.Add(new ShootingEnemy(this, position, spriteSet));
 
             return new Tile(null, TileCollision.Passable);
@@ -318,11 +309,6 @@ namespace Platformer2D
             enemies.Remove(enemy);
         }
 
-
-
-        /// <summary>
-        /// Unloads the level content.
-        /// </summary>
         public void Dispose()
         {
             Content.Unload();
@@ -350,10 +336,7 @@ namespace Platformer2D
             return tiles[x, y].Collision;
         }
 
-        /// <summary>
-        /// Gets the bounding rectangle of a tile in world space.
-        /// </summary>        
-        public Rectangle GetBounds(int x, int y)
+        public static Rectangle GetBounds(int x, int y)
         {
             return new Rectangle(x * Tile.Width, y * Tile.Height, Tile.Width, Tile.Height);
         }
@@ -457,7 +440,9 @@ namespace Platformer2D
                     if (projectile.BoundingRectangle.Intersects(enemy.BoundingRectangle))
                     {
                         playerProjectiles.RemoveAt(i);
+                        projectile.Destroy();
                         enemies.RemoveAt(j);
+                        enemy.Destroy();
                         i--;
                         break;
                     }
