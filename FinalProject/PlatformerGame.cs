@@ -12,11 +12,9 @@ namespace FinalProject
     public class PlatformerGame : Game
     {
         // Resources for drawing.
-        private GraphicsDeviceManager graphics;
+        private readonly GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
-        Vector2 baseScreenSize = new Vector2(800, 480);
-        private Matrix globalTransformation;
-        int backbufferWidth, backbufferHeight;
+        private readonly Vector2 baseScreenSize = new(800, 480);
 
         // Global content.
         private SpriteFont hudFont;
@@ -52,9 +50,6 @@ namespace FinalProject
         {
             graphics = new GraphicsDeviceManager(this);
 
-#if WINDOWS_PHONE
-            TargetElapsedTime = TimeSpan.FromTicks(333333);
-#endif
             graphics.IsFullScreen = false;
 
             //graphics.PreferredBackBufferWidth = 800;
@@ -72,50 +67,28 @@ namespace FinalProject
         {
             this.Content.RootDirectory = "Content";
 
-            // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Load fonts
             hudFont = Content.Load<SpriteFont>("Fonts/Hud");
 
-            // Load overlay textures
             winOverlay = Content.Load<Texture2D>("Overlays/you_win");
             loseOverlay = Content.Load<Texture2D>("Overlays/you_lose");
             diedOverlay = Content.Load<Texture2D>("Overlays/you_died");
+            
+            virtualGamePad = new VirtualGamePad(baseScreenSize, Matrix.Identity, Content.Load<Texture2D>("Sprites/VirtualControlArrow"));
 
-            ScalePresentationArea();
-
-            virtualGamePad = new VirtualGamePad(baseScreenSize, globalTransformation, Content.Load<Texture2D>("Sprites/VirtualControlArrow"));
-
-            if (!OperatingSystem.IsIOS())
+            try
             {
-                //Known issue that you get exceptions if you use Media PLayer while connected to your PC
-                //See http://social.msdn.microsoft.com/Forums/en/windowsphone7series/thread/c8a243d2-d360-46b1-96bd-62b1ef268c66
-                //Which means its impossible to test this from VS.
-                //So we have to catch the exception and throw it away
-                try
-                {
-                    MediaPlayer.IsRepeating = true;
-                    MediaPlayer.Play(Content.Load<Song>("Sounds/Music"));
-                }
-                catch { }
+                MediaPlayer.IsRepeating = true;
+                MediaPlayer.Play(Content.Load<Song>("Sounds/Music"));
+            }
+            catch
+            {
+                Console.WriteLine("Could not play music");
             }
 
             LoadNextLevel();
         }
-
-        public void ScalePresentationArea()
-        {
-            //Work out how much we need to scale our graphics to fill the screen
-            backbufferWidth = GraphicsDevice.PresentationParameters.BackBufferWidth;
-            backbufferHeight = GraphicsDevice.PresentationParameters.BackBufferHeight;
-            float horScaling = backbufferWidth / baseScreenSize.X;
-            float verScaling = backbufferHeight / baseScreenSize.Y;
-            Vector3 screenScalingFactor = new Vector3(horScaling, verScaling, 1);
-            globalTransformation = Matrix.CreateScale(screenScalingFactor);
-            System.Diagnostics.Debug.WriteLine("Screen Size - Width[" + GraphicsDevice.PresentationParameters.BackBufferWidth + "] Height [" + GraphicsDevice.PresentationParameters.BackBufferHeight + "]");
-        }
-
 
         /// <summary>
         /// Allows the game to run logic such as updating the world,
@@ -124,21 +97,10 @@ namespace FinalProject
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            //Confirm the screen has not been resized by the user
-            if (backbufferHeight != GraphicsDevice.PresentationParameters.BackBufferHeight ||
-                backbufferWidth != GraphicsDevice.PresentationParameters.BackBufferWidth)
-            {
-                ScalePresentationArea();
-            }
             // Handle polling for our input and handling high-level input
             HandleInput(gameTime);
 
-            // update our level, passing down the GameTime along with all of our input states
-            level.Update(gameTime, keyboardState, gamePadState,
-                         accelerometerState, Window.CurrentOrientation);
-
-            if (level.Player.Velocity != Vector2.Zero)
-                virtualGamePad.NotifyPlayerIsMoving();
+            GameObjectManager.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -160,8 +122,7 @@ namespace FinalProject
 
             bool continuePressed =
                 keyboardState.IsKeyDown(Keys.Space) ||
-                gamePadState.IsButtonDown(Buttons.A) ||
-                touchState.AnyTouch();
+                gamePadState.IsButtonDown(Buttons.A);
 
             // Perform the appropriate action to advance the game and
             // to get the player back to playing.
@@ -191,13 +152,14 @@ namespace FinalProject
             levelIndex = (levelIndex + 1) % numberOfLevels;
 
             // Unloads the content for the current level before loading the next one.
-            if (level != null)
-                level.Dispose();
+            level?.Dispose();
 
             // Load the level.
-            string levelPath = string.Format("Content/Levels/{0}.txt", levelIndex);
+            string levelPath = $"Content/Levels/{levelIndex}.txt";
             using (Stream fileStream = TitleContainer.OpenStream(levelPath))
+            {
                 level = new Level(Services, fileStream, levelIndex);
+            }
         }
 
         private void ReloadCurrentLevel()
@@ -214,10 +176,11 @@ namespace FinalProject
         {
             graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, globalTransformation);
+            spriteBatch.Begin();
 
-            level.Draw(gameTime, spriteBatch);
-
+            // level.Draw(gameTime, spriteBatch);
+            GameObjectManager.Draw(gameTime, spriteBatch);
+            
             DrawHud();
 
             spriteBatch.End();
@@ -276,7 +239,7 @@ namespace FinalProject
             {
                 // Draw status message.
                 Vector2 statusSize = new Vector2(status.Width, status.Height);
-                spriteBatch.Draw(status, center - statusSize / 2, Color.White);
+                spriteBatch.Draw(status, center - 0.5f * statusSize, Color.White);
             }
 
             if (touchState.IsConnected)

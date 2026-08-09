@@ -48,7 +48,7 @@ namespace Platformer2D
             Vector2 direction = Center - v;
             float distanceSquared = direction.LengthSquared();
 
-            return ((distanceSquared > 0) && (distanceSquared < Radius * Radius));
+            return (distanceSquared > 0) && (distanceSquared < Radius * Radius);
         }
     }
 }

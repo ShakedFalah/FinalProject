@@ -1,15 +1,6 @@
-﻿#region File Description
-//-----------------------------------------------------------------------------
-// Enemy.cs
-//
-// Microsoft XNA Community Game Platform
-// Copyright (C) Microsoft Corporation. All rights reserved.
-//-----------------------------------------------------------------------------
-#endregion
-
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 
 namespace Platformer2D
 {
@@ -25,20 +16,16 @@ namespace Platformer2D
     /// <summary>
     /// Abstract class for enemies that move and turn around
     /// </summary>
-    abstract class Enemy
+    abstract class Enemy : GameObject, IDrawable
     {
-        public Level Level
-        {
-            get { return level; }
-        }
-        Level level;
+        public Level Level { get; }
 
         /// <summary>
         /// Position in world space of the bottom center of this enemy.
         /// </summary>
         public Vector2 Position
         {
-            get { return position; }
+            get => position;
         }
         protected Vector2 position;
 
@@ -65,19 +52,25 @@ namespace Platformer2D
         // Animations
         protected Animation runAnimation;
         protected AnimationPlayer sprite;
+        protected bool isAnimationLooping = true;
 
         /// <summary>
         /// The speed at which this enemy moves along the X axis.
         /// </summary>
         protected virtual float MoveSpeed => 64.0f;
 
+        public bool IsWalking => Level.Player.IsAlive &&
+                !Level.ReachedExit &&
+                Level.TimeRemaining > TimeSpan.Zero;
+
         /// <summary>
         /// Constructs a new Enemy.
         /// </summary>
-        public Enemy(Level level, Vector2 position, string spriteSet)
+        public Enemy(Level level, Vector2 position, string spriteSet, bool isAnimationLooping = true)
         {
-            this.level = level;
+            this.Level = level;
             this.position = position;
+            this.isAnimationLooping = isAnimationLooping;
 
             LoadContent(spriteSet);
         }
@@ -89,7 +82,7 @@ namespace Platformer2D
         {
             // Load animations.
             spriteSet = "Sprites/" + spriteSet + "/";
-            runAnimation = new Animation(Level.Content.Load<Texture2D>(spriteSet + "Run"), 0.1f, true);
+            runAnimation = new Animation(Level.Content.Load<Texture2D>(spriteSet + "Run"), 0.1f, isAnimationLooping);
             sprite.PlayAnimation(runAnimation);
 
             // Calculate bounds within texture size.
@@ -103,14 +96,11 @@ namespace Platformer2D
         /// <summary>
         /// Draws the animated enemy.
         /// </summary>
-        public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        public virtual void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
             // Draw facing the way the enemy is moving.
             SpriteEffects flip = direction > 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             sprite.Draw(gameTime, spriteBatch, Position, flip);
         }
-
-        public abstract void Update(GameTime gameTime);
-
     }
 }

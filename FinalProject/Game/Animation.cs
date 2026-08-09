@@ -22,69 +22,27 @@ namespace Platformer2D
     /// </remarks>
     class Animation
     {
-        /// <summary>
-        /// All frames in the animation arranged horizontally.
-        /// </summary>
-        public Texture2D Texture
-        {
-            get { return texture; }
-        }
-        Texture2D texture;
+        public Texture2D Texture { get; }
 
-        /// <summary>
-        /// Duration of time to show each frame.
-        /// </summary>
-        public float FrameTime
-        {
-            get { return frameTime; }
-        }
-        float frameTime;
+        public float FrameTime { get; }
 
-        /// <summary>
-        /// When the end of the animation is reached, should it
-        /// continue playing from the beginning?
-        /// </summary>
-        public bool IsLooping
-        {
-            get { return isLooping; }
-            set {  isLooping = value; }
-        }
-        bool isLooping;
+        public bool IsLooping { get; }
 
-        /// <summary>
-        /// Gets the number of frames in the animation.
-        /// </summary>
-        public int FrameCount
+        public int FrameWidth { get; }
+
+        public int FrameCount => Texture.Width / FrameWidth;
+
+        public int FrameHeight => Texture.Height;
+
+        public Animation(Texture2D texture, float frameTime, int frameWidth, bool isLooping)
         {
-            // Assume square frames.
-            get { return Texture.Width / FrameHeight; }
+            Texture = texture;
+            FrameTime = frameTime;
+            FrameWidth = frameWidth;
+            IsLooping = isLooping;
         }
 
-        /// <summary>
-        /// Gets the width of a frame in the animation.
-        /// </summary>
-        public int FrameWidth
-        {
-            // Assume square frames.
-            get { return Texture.Height; }
-        }
-
-        /// <summary>
-        /// Gets the height of a frame in the animation.
-        /// </summary>
-        public int FrameHeight
-        {
-            get { return Texture.Height; }
-        }
-
-        /// <summary>
-        /// Constructors a new animation.
-        /// </summary>        
         public Animation(Texture2D texture, float frameTime, bool isLooping)
-        {
-            this.texture = texture;
-            this.frameTime = frameTime;
-            this.isLooping = isLooping;
-        }
+        : this(texture, frameTime, texture.Height, isLooping) {}
     }
 }

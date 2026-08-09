@@ -1,12 +1,3 @@
-#region File Description
-//-----------------------------------------------------------------------------
-// Player.cs
-//
-// Microsoft XNA Community Game Platform
-// Copyright (C) Microsoft Corporation. All rights reserved.
-//-----------------------------------------------------------------------------
-#endregion
-
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
@@ -15,10 +6,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Platformer2D
 {
-    /// <summary>
-    /// Our fearless adventurer!
-    /// </summary>
-    class Player
+    class Player : GameObject, IDrawable
     {
         // Animations
         private Animation idleAnimation;
@@ -34,32 +22,19 @@ namespace Platformer2D
         private SoundEffect jumpSound;
         private SoundEffect fallSound;
 
-        public Level Level
-        {
-            get { return level; }
-        }
-        Level level;
+        public Level Level { get; }
 
-        public bool IsAlive
-        {
-            get { return isAlive; }
-        }
-        bool isAlive;
+        public bool IsAlive { get; private set; }
 
         // Physics state
-        public Vector2 Position
-        {
-            get { return position; }
-            set { position = value; }
-        }
-        Vector2 position;
+        public Vector2 Position { get; set; }
 
         private float previousBottom;
 
         public Vector2 Velocity
         {
-            get { return velocity; }
-            set { velocity = value; }
+            get => velocity;
+            set => velocity = value;
         }
         Vector2 velocity;
 
@@ -83,13 +58,9 @@ namespace Platformer2D
         private const Buttons JumpButton = Buttons.A;
 
         /// <summary>
-        /// Gets whether or not the player's feet are on the ground.
+        /// Gets whether the player's feet are on the ground.
         /// </summary>
-        public bool IsOnGround
-        {
-            get { return isOnGround; }
-        }
-        bool isOnGround;
+        public bool IsOnGround { get; private set; }
 
         /// <summary>
         /// Current user movement input.
@@ -106,7 +77,6 @@ namespace Platformer2D
         private float wallTimer = 0f;
         private const float WallGraceTime = 0.12f;
         private const float WallSlideSpeed = 80f;
-        private const float WallJumpLaunchVelocity = -1000.0f;
         private const float WallJumpHorizontalVelocity = 2500.0f;
         private float wallJumpSameWallCooldown = 0f;
         private const float WallJumpSameWallCooldownTime = 0.5f;
@@ -118,7 +88,9 @@ namespace Platformer2D
         // Shooting
         private bool isShootPressed = false;
         private float shootingCooldown = 0f;
-        private float maxShootingCooldown = 1f;
+        private const float MaxShootingCooldown = 1f;
+
+        private bool isCelebrating;
 
         private Rectangle localBounds;
         /// <summary>
@@ -135,71 +107,45 @@ namespace Platformer2D
             }
         }
 
-        /// <summary>
-        /// Constructors a new player.
-        /// </summary>
         public Player(Level level, Vector2 position)
         {
-            this.level = level;
+            this.Level = level;
 
             LoadContent();
 
             Reset(position);
         }
 
-        /// <summary>
-        /// Loads the player sprite sheet and sounds.
-        /// </summary>
         public void LoadContent()
         {
-            // Load animated textures.
             idleAnimation = new Animation(Level.Content.Load<Texture2D>("Sprites/Player/Idle"), 0.1f, true);
             runAnimation = new Animation(Level.Content.Load<Texture2D>("Sprites/Player/Run"), 0.1f, true);
             jumpAnimation = new Animation(Level.Content.Load<Texture2D>("Sprites/Player/Jump"), 0.1f, false);
             celebrateAnimation = new Animation(Level.Content.Load<Texture2D>("Sprites/Player/Celebrate"), 0.1f, false);
             dieAnimation = new Animation(Level.Content.Load<Texture2D>("Sprites/Player/Die"), 0.1f, false);
 
-            // Calculate bounds within texture size.            
             int width = (int)(idleAnimation.FrameWidth * 0.4);
             int left = (idleAnimation.FrameWidth - width) / 2;
             int height = (int)(idleAnimation.FrameHeight * 0.8);
             int top = idleAnimation.FrameHeight - height;
             localBounds = new Rectangle(left, top, width, height);
 
-            // Load sounds.            
             killedSound = Level.Content.Load<SoundEffect>("Sounds/PlayerKilled");
             jumpSound = Level.Content.Load<SoundEffect>("Sounds/PlayerJump");
             fallSound = Level.Content.Load<SoundEffect>("Sounds/PlayerFall");
         }
 
-        /// <summary>
-        /// Resets the player to life.
-        /// </summary>
-        /// <param name="position">The position to come to life at.</param>
         public void Reset(Vector2 position)
         {
             Position = position;
             Velocity = Vector2.Zero;
-            isAlive = true;
+            IsAlive = true;
+            isCelebrating = false;
             sprite.PlayAnimation(idleAnimation);
         }
 
-        /// <summary>
-        /// Handles input, performs physics, and animates the player sprite.
-        /// </summary>
-        /// <remarks>
-        /// We pass in all of the input states so that our game is only polling the hardware
-        /// once per frame. We also pass the game's orientation because when using the accelerometer,
-        /// we need to reverse our motion when the orientation is in the LandscapeRight orientation.
-        /// </remarks>
-        public void Update(
-            GameTime gameTime, 
-            KeyboardState keyboardState, 
-            GamePadState gamePadState, 
-            AccelerometerState accelState,
-            DisplayOrientation orientation)
+        public override void Update(GameTime gameTime)
         {
-            GetInput(keyboardState, gamePadState, accelState, orientation);
 
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -207,45 +153,39 @@ namespace Platformer2D
 
             wallJumpSameWallCooldown -= elapsed;
 
-            isWallHugging = wallTimer > 0 && !isOnGround;
-
-            ApplyPhysics(gameTime);
+            isWallHugging = wallTimer > 0 && !IsOnGround;
 
             if (shootingCooldown > 0)
             {
                 shootingCooldown -= elapsed;
-            } else if (isShootPressed)
+            }
+            else if (isShootPressed)
             {
-                shootingCooldown = maxShootingCooldown;
+                shootingCooldown = MaxShootingCooldown;
                 Shoot();
             }
 
-            if (IsAlive && IsOnGround)
+            if (IsAlive && !isCelebrating)
             {
-                if (Math.Abs(Velocity.X) - 0.02f > 0)
+                HandleInput();
+
+                if (IsOnGround)
                 {
-                    sprite.PlayAnimation(runAnimation);
-                }
-                else
-                {
-                    sprite.PlayAnimation(idleAnimation);
+                    sprite.PlayAnimation(Math.Abs(Velocity.X) - 0.02f > 0 ? runAnimation : idleAnimation);
                 }
             }
 
-            // Clear input.
+            ApplyPhysics(gameTime);
+
             movement = 0.0f;
         }
-
-        /// <summary>
-        /// Gets player horizontal movement and jump commands from input.
-        /// </summary>
-        private void GetInput(
-            KeyboardState keyboardState, 
-            GamePadState gamePadState,
-            AccelerometerState accelState, 
-            DisplayOrientation orientation)
+        
+        private void HandleInput()
         {
-            // Get analog horizontal movement.
+            KeyboardState keyboardState = Keyboard.GetState();
+            GamePadState gamePadState = GamePad.GetState(0);
+            AccelerometerState accelState = Accelerometer.GetState();
+            
             movement = gamePadState.ThumbSticks.Left.X * MoveStickScale;
             isShootPressed = false;
 
@@ -253,18 +193,11 @@ namespace Platformer2D
             if (Math.Abs(movement) < 0.5f)
                 movement = 0.0f;
 
-            // Move the player with accelerometer
             if (Math.Abs(accelState.Acceleration.Y) > 0.10f)
             {
-                // set our movement speed
                 movement = MathHelper.Clamp(-accelState.Acceleration.Y * AccelerometerScale, -1f, 1f);
-
-                // if we're in the LandscapeLeft orientation, we must reverse our movement
-                if (orientation == DisplayOrientation.LandscapeRight)
-                    movement = -movement;
             }
 
-            // If any digital horizontal movement input is found, override the analog movement.
             if (gamePadState.IsButtonDown(Buttons.DPadLeft) ||
                 keyboardState.IsKeyDown(Keys.Left) ||
                 keyboardState.IsKeyDown(Keys.A))
@@ -288,18 +221,13 @@ namespace Platformer2D
             // Check if the player wants to jump.
             bool jumpDown =
                 gamePadState.IsButtonDown(JumpButton) ||
-                keyboardState.IsKeyDown(Keys.Space) ||
-                keyboardState.IsKeyDown(Keys.Up) ||
-                keyboardState.IsKeyDown(Keys.W);
+                keyboardState.IsKeyDown(Keys.Space);
 
             jumpPressed = jumpDown && !isJumping;
             isJumping = jumpDown;
         }
 
-        /// <summary>
-        /// Updates the player's velocity and position based on input, gravity, etc.
-        /// </summary>
-        public void ApplyPhysics(GameTime gameTime)
+        void ApplyPhysics(GameTime gameTime)
         {
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -353,23 +281,6 @@ namespace Platformer2D
                 velocity.Y = 0;
         }
 
-        /// <summary>
-        /// Calculates the Y velocity accounting for jumping and
-        /// animates accordingly.
-        /// </summary>
-        /// <remarks>
-        /// During the accent of a jump, the Y velocity is completely
-        /// overridden by a power curve. During the decent, gravity takes
-        /// over. The jump velocity is controlled by the jumpTime field
-        /// which measures time into the accent of the current jump.
-        /// </remarks>
-        /// <param name="velocityY">
-        /// The player's current velocity along the Y axis.
-        /// </param>
-        /// <returns>
-        /// A new Y velocity if beginning or continuing a jump.
-        /// Otherwise, the existing Y velocity.
-        /// </returns>
         private float DoJump(float velocityY, GameTime gameTime)
         {
             // Start a jump
@@ -441,11 +352,11 @@ namespace Platformer2D
             // Get the player's bounding rectangle and find neighboring tiles.
             Rectangle bounds = BoundingRectangle;
             int leftTile = (int)Math.Floor((float)bounds.Left / Tile.Width);
-            int rightTile = (int)Math.Ceiling(((float)bounds.Right / Tile.Width)) - 1;
+            int rightTile = (int)Math.Ceiling((float)bounds.Right / Tile.Width) - 1;
             int topTile = (int)Math.Floor((float)bounds.Top / Tile.Height);
-            int bottomTile = (int)Math.Ceiling(((float)bounds.Bottom / Tile.Height)) - 1;
+            int bottomTile = (int)Math.Ceiling((float)bounds.Bottom / Tile.Height) - 1;
             // Reset flag to search for ground collision.
-            isOnGround = false;
+            IsOnGround = false;
 
             // For each potentially colliding tile,
             for (int y = topTile; y <= bottomTile; ++y)
@@ -458,7 +369,7 @@ namespace Platformer2D
                     {
                         // Determine collision depth (with direction) and magnitude.
                         Rectangle tileBounds = Level.GetBounds(x, y);
-                        Vector2 depth = RectangleExtensions.GetIntersectionDepth(bounds, tileBounds);
+                        Vector2 depth = bounds.GetIntersectionDepth(tileBounds);
                         if (depth != Vector2.Zero)
                         {
                             float absDepthX = Math.Abs(depth.X);
@@ -470,7 +381,7 @@ namespace Platformer2D
                                 // If we crossed the top of a tile, we are on the ground.
                                 if (previousBottom <= tileBounds.Top)
                                 {
-                                    isOnGround = true;
+                                    IsOnGround = true;
                                 }
 
                                 // Ignore platforms, unless we are on the ground.
@@ -483,12 +394,12 @@ namespace Platformer2D
                                     bounds = BoundingRectangle;
                                 }
                             }
-                            else if (collision == TileCollision.Impassable) // Ignore platforms.
+                            else if (collision == TileCollision.Impassable)
                             {
                                 // Resolve the collision along the X axis.
                                 Position = new Vector2(Position.X + depth.X, Position.Y);
 
-                                if (!isOnGround)
+                                if (!IsOnGround)
                                 {
                                     // Determine wall side
                                     if (depth.X < 0)
@@ -513,7 +424,7 @@ namespace Platformer2D
                 }
             }
 
-            if (isOnGround)
+            if (IsOnGround)
             {
                 isWallHugging = false;
                 wallTimer = 0;
@@ -523,16 +434,11 @@ namespace Platformer2D
             previousBottom = bounds.Bottom;
         }
 
-        /// <summary>
-        /// Called when the player has been killed.
-        /// </summary>
-        /// <param name="killedBy">
-        /// The enemy who killed the player. This parameter is null if the player was
-        /// not killed by an enemy (fell into a hole).
-        /// </param>
         public void OnKilled(Enemy killedBy)
         {
-            isAlive = false;
+            if (!IsAlive) return;
+
+            IsAlive = false;
 
             if (killedBy != null)
                 killedSound.Play();
@@ -548,12 +454,13 @@ namespace Platformer2D
         public void OnReachedExit()
         {
             sprite.PlayAnimation(celebrateAnimation);
+            isCelebrating = true;
         }
 
         /// <summary>
         /// Draws the animated player.
         /// </summary>
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
             // Flip the sprite to face the way we are moving.
             if (Velocity.X > 0)
