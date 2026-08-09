@@ -8,11 +8,6 @@ using System.IO;
 
 namespace Platformer2D
 {
-    /// <summary>
-    /// A uniform grid of tiles with collections of gems and enemies.
-    /// The level owns the player and controls the game's win and lose
-    /// conditions as well as scoring.
-    /// </summary>
     class Level : GameObject, IDrawable, IDisposable
     {
         // Physical structure of the level.
@@ -33,9 +28,6 @@ namespace Platformer2D
         private static readonly Point InvalidPosition = new(-1, -1);
         private Vector2 start;
         private Point exit = InvalidPosition;
-
-        // Level game state.
-        private readonly Random rng = new(354668); // Arbitrary, but constant seed
 
         public int Score { get; private set; }
 
@@ -75,14 +67,6 @@ namespace Platformer2D
             exitReachedSound = Content.Load<SoundEffect>("Sounds/ExitReached");
         }
 
-        /// <summary>
-        /// Iterates over every tile in the structure file and loads its
-        /// appearance and behavior. This method also validates that the
-        /// file is well-formed with a player start point, exit, etc.
-        /// </summary>
-        /// <param name="fileStream">
-        /// A stream containing the tile data.
-        /// </param>
         private void LoadTiles(Stream fileStream)
         {
             // Load the level and ensure all of the lines are the same length.
@@ -178,11 +162,7 @@ namespace Platformer2D
 
                 // Platform block
                 case '~':
-                    return LoadVarietyTile("BlockB", 2, TileCollision.Platform);
-
-                // Passable block
-                case ':':
-                    return LoadVarietyTile("BlockB", 2, TileCollision.Passable);
+                    return LoadTile("BlockB", TileCollision.Platform);
 
                 // Player 1 start point
                 case 'P':
@@ -190,7 +170,7 @@ namespace Platformer2D
 
                 // Impassable block
                 case '#':
-                    return LoadVarietyTile("BlockA", 7, TileCollision.Impassable);
+                    return LoadTile("BlockA", TileCollision.Impassable);
 
                 // Unknown tile type character
                 default:
@@ -201,13 +181,6 @@ namespace Platformer2D
         private Tile LoadTile(string name, TileCollision collision)
         {
             return new Tile(Content.Load<Texture2D>("Tiles/" + name), collision);
-        }
-
-
-        private Tile LoadVarietyTile(string baseName, int variationCount, TileCollision collision)
-        {
-            int index = rng.Next(variationCount);
-            return LoadTile(baseName + index, collision);
         }
 
         /// <summary>
