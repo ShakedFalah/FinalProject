@@ -354,7 +354,7 @@ namespace Platformer2D
             int leftTile = (int)Math.Floor((float)bounds.Left / Tile.Width);
             int rightTile = (int)Math.Ceiling((float)bounds.Right / Tile.Width) - 1;
             int topTile = (int)Math.Floor((float)bounds.Top / Tile.Height);
-            int bottomTile = (int)Math.Ceiling(((float)bounds.Bottom / Tile.Height)) - 1;
+            int bottomTile = (int)Math.Ceiling((float)bounds.Bottom / Tile.Height) - 1;
             // Reset flag to search for ground collision.
             IsOnGround = false;
 

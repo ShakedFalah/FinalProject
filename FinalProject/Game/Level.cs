@@ -174,7 +174,7 @@ namespace Platformer2D
 
                 // Unknown tile type character
                 default:
-                    throw new NotSupportedException(String.Format("Unsupported tile type character '{0}' at position {1}, {2}.", tileType, x, y));
+                    throw new NotSupportedException($"Unsupported tile type character '{tileType}' at position {x}, {y}.");
             }
         }
 
@@ -183,9 +183,6 @@ namespace Platformer2D
             return new Tile(Content.Load<Texture2D>("Tiles/" + name), collision);
         }
 
-        /// <summary>
-        /// Instantiates a player, puts him in the level, and remembers where to put him when he is resurrected.
-        /// </summary>
         private Tile LoadStartTile(int x, int y)
         {
             if (Player != null)
@@ -197,9 +194,6 @@ namespace Platformer2D
             return new Tile(null, TileCollision.Passable);
         }
 
-        /// <summary>
-        /// Remembers the location of the level's exit.
-        /// </summary>
         private Tile LoadExitTile(int x, int y)
         {
             if (exit != InvalidPosition)
@@ -210,9 +204,6 @@ namespace Platformer2D
             return LoadTile("Exit", TileCollision.Passable);
         }
 
-        /// <summary>
-        /// Instantiates an enemy and puts him in the level.
-        /// </summary>
         private Tile LoadWalkingEnemyTile(int x, int y, string spriteSet)
         {
             Vector2 position = GetBounds(x, y).GetBottomCenter();
@@ -246,9 +237,6 @@ namespace Platformer2D
         }
 
 
-        /// <summary>
-        /// Instantiates a gem and puts it in the level.
-        /// </summary>
         private Tile LoadGemTile(int x, int y)
         {
             Point position = GetBounds(x, y).Center;
@@ -314,24 +302,13 @@ namespace Platformer2D
             return new Rectangle(x * Tile.Width, y * Tile.Height, Tile.Width, Tile.Height);
         }
 
-        /// <summary>
-        /// Width of level measured in tiles.
-        /// </summary>
         public int Width => tiles.GetLength(0);
-
-        /// <summary>
-        /// Height of the level measured in tiles.
-        /// </summary>
         public int Height => tiles.GetLength(1);
 
         #endregion
 
         #region Update
 
-        /// <summary>
-        /// Updates all objects in the world, performs collision between them,
-        /// and handles the time limit with scoring.
-        /// </summary>
         public override void Update(GameTime gameTime)
         {
             if (ReachedExit)
@@ -353,7 +330,6 @@ namespace Platformer2D
                 HandleTriggerCollisions();
             }
 
-            // Clamp the time remaining at zero.
             if (TimeRemaining < TimeSpan.Zero)
                 TimeRemaining = TimeSpan.Zero;
         }
@@ -377,7 +353,6 @@ namespace Platformer2D
             
             foreach (Enemy enemy in enemies)
             {
-                // Touching an enemy instantly kills the player
                 if (enemy.BoundingRectangle.Intersects(Player.BoundingRectangle))
                 {
                     Player.OnKilled(enemy);
@@ -424,9 +399,6 @@ namespace Platformer2D
 
         }
 
-        /// <summary>
-        /// Restores the player to the starting point to try the level again.
-        /// </summary>
         public void StartNewLife()
         {
             Player.Reset(start);
@@ -436,9 +408,6 @@ namespace Platformer2D
 
         #region Draw
 
-        /// <summary>
-        /// Draw everything in the level from background to foreground.
-        /// </summary>
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
             for (int i = 0; i <= EntityLayer; ++i)
@@ -450,21 +419,15 @@ namespace Platformer2D
                 spriteBatch.Draw(layers[i], Vector2.Zero, Color.White);
         }
 
-        /// <summary>
-        /// Draws each tile in the level.
-        /// </summary>
         private void DrawTiles(SpriteBatch spriteBatch)
         {
-            // For each tile position
             for (int y = 0; y < Height; ++y)
             {
                 for (int x = 0; x < Width; ++x)
                 {
-                    // If there is a visible tile in that position
                     Texture2D texture = tiles[x, y].Texture;
                     if (texture != null)
                     {
-                        // Draw it in screen space.
                         Vector2 position = new Vector2(x, y) * Tile.Size;
                         spriteBatch.Draw(texture, position, Color.White);
                     }

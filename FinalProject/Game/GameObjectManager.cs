@@ -26,6 +26,8 @@ public static class GameObjectManager
 
     public static void Update(GameTime gameTime)
     {
+        // I need to shallow copy the list so it doesn't get modified during the loop
+        // ToArray() is somehow the most compact shallow "copy" method I found -_-
         foreach (GameObject obj in gameObjects.ToArray())
         {
             obj.Update(gameTime);
