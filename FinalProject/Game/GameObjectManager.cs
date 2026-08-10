@@ -44,4 +44,12 @@ public static class GameObjectManager
             }
         }
     }
+
+    public static void Dispose()
+    {
+        foreach (GameObject obj in gameObjects.ToArray())
+        {
+            obj.Dispose();
+        }
+    }
 }

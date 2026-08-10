@@ -18,6 +18,7 @@ namespace Platformer2D
         public TriggerCollider(GameObject parent, Func<Rectangle> boundingBox)
         {
             this.parent = parent;
+            parent.AddResource(this);
             this.BoundingBox = boundingBox;
             triggers.Add(this);
         }
@@ -42,7 +43,6 @@ namespace Platformer2D
                     if (first.BoundingBox().Intersects(second.BoundingBox()))
                     {
                         first.OnTrigger?.Invoke(second.parent);
-                        // second.OnTrigger(first.parent);
                     }
                 }
             }

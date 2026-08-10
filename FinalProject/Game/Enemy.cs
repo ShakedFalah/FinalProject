@@ -20,24 +20,18 @@ namespace Platformer2D
     {
         public Level Level { get; }
 
-        /// <summary>
-        /// Position in world space of the bottom center of this enemy.
-        /// </summary>
         public Vector2 Position
         {
             get => position;
         }
         protected Vector2 position;
 
-        /// <summary>
-        /// The direction this enemy is facing and moving along the X axis.
-        /// </summary>
         protected FaceDirection direction = FaceDirection.Left;
 
         protected Rectangle localBounds;
-        /// <summary>
-        /// Gets a rectangle which bounds this enemy in world space.
-        /// </summary>
+
+        protected TriggerCollider trigger;
+        
         public Rectangle BoundingRectangle
         {
             get
@@ -49,28 +43,22 @@ namespace Platformer2D
             }
         }
 
-        // Animations
         protected Animation runAnimation;
         protected AnimationPlayer sprite;
         protected bool isAnimationLooping = true;
 
-        /// <summary>
-        /// The speed at which this enemy moves along the X axis.
-        /// </summary>
         protected virtual float MoveSpeed => 64.0f;
 
         public bool IsWalking => Level.Player.IsAlive &&
                 !Level.ReachedExit &&
                 Level.TimeRemaining > TimeSpan.Zero;
 
-        /// <summary>
-        /// Constructs a new Enemy.
-        /// </summary>
         public Enemy(Level level, Vector2 position, string spriteSet, bool isAnimationLooping = true)
         {
             this.Level = level;
             this.position = position;
             this.isAnimationLooping = isAnimationLooping;
+            this.trigger = new TriggerCollider(this, () => BoundingRectangle);
 
             LoadContent(spriteSet);
         }

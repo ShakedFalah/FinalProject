@@ -110,6 +110,7 @@ namespace Platformer2D
         {
             this.Level = level;
             this.trigger = new TriggerCollider(this, () => BoundingRectangle);
+            this.trigger.OnTrigger += OnTriggerEnter;
 
             LoadContent();
 
@@ -434,32 +435,33 @@ namespace Platformer2D
             previousBottom = bounds.Bottom;
         }
 
-        public void OnKilled(Enemy killedBy)
+        public void OnTriggerEnter(GameObject other)
+        {
+            if (other is Enemy && other is not Projectile) OnKilled();
+            else if (other is Exit) OnReachedExit();
+        }
+
+        public void OnKilled(bool fall = false)
         {
             if (!IsAlive) return;
 
             IsAlive = false;
 
-            if (killedBy != null)
-                killedSound.Play();
-            else
+            if (fall)
                 fallSound.Play();
+            else
+                killedSound.Play();
 
             sprite.PlayAnimation(dieAnimation);
         }
 
-        /// <summary>
-        /// Called when this player reaches the level's exit.
-        /// </summary>
         public void OnReachedExit()
         {
             sprite.PlayAnimation(celebrateAnimation);
             isCelebrating = true;
+            Level.FinishLevel();
         }
 
-        /// <summary>
-        /// Draws the animated player.
-        /// </summary>
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
             // Flip the sprite to face the way we are moving.
@@ -468,7 +470,6 @@ namespace Platformer2D
             else if (Velocity.X < 0)
                 flip = SpriteEffects.None;
 
-            // Draw that sprite.
             sprite.Draw(gameTime, spriteBatch, Position, flip);
         }
 

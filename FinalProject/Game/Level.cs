@@ -19,15 +19,14 @@ namespace Platformer2D
         // Entities in the level.
         public Player Player { get; private set; }
 
-        private List<Gem> gems = new List<Gem>();
-        private List<Enemy> enemies = new List<Enemy>();
-        private List<Projectile> enemyProjectiles = new List<Projectile>();
-        private List<Projectile> playerProjectiles = new List<Projectile>();
+        private readonly List<Gem> gems = [];
+        private readonly List<Enemy> enemies = [];
+        private readonly List<Projectile> enemyProjectiles = [];
+        private readonly List<Projectile> playerProjectiles = [];
 
         // Key locations in the level.
-        private static readonly Point InvalidPosition = new(-1, -1);
         private Vector2 start;
-        private Point exit = InvalidPosition;
+        private Exit exit = null;
 
         public int Score { get; set; }
 
@@ -71,8 +70,8 @@ namespace Platformer2D
         {
             // Load the level and ensure all of the lines are the same length.
             int width;
-            List<string> lines = new List<string>();
-            using (StreamReader reader = new StreamReader(fileStream))
+            List<string> lines = [];
+            using (StreamReader reader = new(fileStream))
             {
                 string line = reader.ReadLine();
                 width = line.Length;
@@ -80,7 +79,7 @@ namespace Platformer2D
                 {
                     lines.Add(line);
                     if (line.Length != width)
-                        throw new Exception($"The length of line {lines.Count} is different from all preceeding lines.");
+                        throw new Exception($"The length of line {lines.Count} is different from all preceding lines.");
                     line = reader.ReadLine();
                 }
             }
@@ -102,7 +101,7 @@ namespace Platformer2D
             // Verify that the level has a beginning and an end.
             if (Player == null)
                 throw new NotSupportedException("A level must have a starting point.");
-            if (exit == InvalidPosition)
+            if (exit == null)
                 throw new NotSupportedException("A level must have an exit.");
 
         }
@@ -196,12 +195,12 @@ namespace Platformer2D
 
         private Tile LoadExitTile(int x, int y)
         {
-            if (exit != InvalidPosition)
+            if (exit != null)
                 throw new NotSupportedException("A level may only have one exit.");
 
-            exit = GetBounds(x, y).Center;
+            exit = new Exit(Content) { Position = new Point(Tile.Width * x, Tile.Height * y) };
 
-            return LoadTile("Exit", TileCollision.Passable);
+            return new Tile(null, TileCollision.Passable);
         }
 
         private Tile LoadWalkingEnemyTile(int x, int y, string spriteSet)
@@ -270,8 +269,9 @@ namespace Platformer2D
             enemies.Remove(enemy);
         }
 
-        public void Dispose()
+        public new void Dispose()
         {
+            GameObjectManager.Dispose();
             Content.Unload();
         }
 
@@ -279,12 +279,6 @@ namespace Platformer2D
 
         #region Bounds and collision
 
-        /// <summary>
-        /// Gets the collision mode of the tile at a particular location.
-        /// This method handles tiles outside of the levels boundries by making it
-        /// impossible to escape past the left or right edges, but allowing things
-        /// to jump beyond the top of the level and fall off the bottom.
-        /// </summary>
         public TileCollision GetCollision(int x, int y)
         {
             // Prevent escaping past the level ends.
@@ -325,77 +319,20 @@ namespace Platformer2D
 
                 // Falling off the bottom of the level kills the player.
                 if (Player.BoundingRectangle.Top >= Height * Tile.Height)
-                    Player.OnKilled(null);
-
-                // HandleTriggerCollisions();
+                    Player.OnKilled(true);
             }
 
             if (TimeRemaining < TimeSpan.Zero)
                 TimeRemaining = TimeSpan.Zero;
         }
 
-        void HandleTriggerCollisions()
+        public void FinishLevel()
         {
-            // TODO move to colliders
-            
-            for (int i = 0; i < gems.Count; ++i)
+            if (!ReachedExit)
             {
-                Gem gem = gems[i];
-                
-                if (gem.BoundingBox.Intersects(Player.BoundingRectangle))
-                {
-                    gems.RemoveAt(i--);
-                    Score += gem.PointValue;
-
-                    gem.OnCollected(Player);
-                }
-            }
-            foreach (Enemy enemy in enemies)
-            {
-                if (enemy.BoundingRectangle.Intersects(Player.BoundingRectangle))
-                {
-                    Player.OnKilled(enemy);
-                }
-            }
-            
-            if (Player.IsAlive &&
-                Player.IsOnGround &&
-                Player.BoundingRectangle.Contains(exit))
-            {
-                Player.OnReachedExit();
                 exitReachedSound.Play();
                 ReachedExit = true;
             }
-
-            for (int i = 0; i < enemyProjectiles.Count; i++)
-            {
-                Projectile projectile = enemyProjectiles[i];
-
-                if (projectile.BoundingRectangle.Intersects(Player.BoundingRectangle))
-                {
-                    Player.OnKilled(projectile);
-                }
-            }
-
-            for (int i = 0; i < playerProjectiles.Count; i++)
-            {
-                Projectile projectile = playerProjectiles[i];
-
-                for (int j = 0; j < enemies.Count; j++)
-                {
-                    Enemy enemy = enemies[j];
-                    if (projectile.BoundingRectangle.Intersects(enemy.BoundingRectangle))
-                    {
-                        playerProjectiles.RemoveAt(i);
-                        projectile.Dispose();
-                        enemies.RemoveAt(j);
-                        enemy.Dispose();
-                        i--;
-                        break;
-                    }
-                }
-            }
-
         }
 
         public void StartNewLife()

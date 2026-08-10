@@ -1,13 +1,4 @@
-﻿#region File Description
-//-----------------------------------------------------------------------------
-// Gem.cs
-//
-// Microsoft XNA Community Game Platform
-// Copyright (C) Microsoft Corporation. All rights reserved.
-//-----------------------------------------------------------------------------
-#endregion
-
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Audio;
@@ -47,7 +38,7 @@ namespace Platformer2D
         public void LoadContent()
         {
             texture = Level.Content.Load<Texture2D>("Sprites/Gem");
-            origin = new Vector2(texture.Width / 2.0f, texture.Height / 2.0f);
+            origin = new Vector2(0.5f * texture.Width, 0.5f * texture.Height);
             collectedSound = Level.Content.Load<SoundEffect>("Sounds/GemCollected");
         }
 
@@ -68,7 +59,6 @@ namespace Platformer2D
             {
                 Level.Score += PointValue;
                 collectedSound.Play();
-                trigger.Dispose();
                 Dispose();
             }
         }
