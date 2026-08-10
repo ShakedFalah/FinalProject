@@ -29,7 +29,7 @@ namespace Platformer2D
                 {
                     Level.RemoveEnemyProjectile(this);
                 }
-                Destroy();
+                Dispose();
             }
         }
     }

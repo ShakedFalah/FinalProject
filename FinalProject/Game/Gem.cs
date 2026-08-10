@@ -25,17 +25,21 @@ namespace Platformer2D
 
         private readonly Vector2 basePosition;
         private float bounce;
+        private TriggerCollider trigger;
 
         public Level Level { get; }
 
         public Vector2 Position => basePosition + new Vector2(0.0f, bounce);
 
-        public Circle BoundingCircle => new(Position, Tile.Width / 3.0f);
+        // public Circle BoundingCircle => new(Position, Tile.Width / 3.0f);
+        public Rectangle BoundingBox => new((int)Position.X - Tile.Width / 2, (int)Position.Y - Tile.Height / 2, Tile.Width, Tile.Height);
 
         public Gem(Level level, Vector2 position)
         {
             this.Level = level;
             this.basePosition = position;
+            this.trigger = new TriggerCollider(this, () => BoundingBox);
+            trigger.OnTrigger += OnCollected;
 
             LoadContent();
         }
@@ -58,10 +62,15 @@ namespace Platformer2D
             bounce = (float)Math.Sin(t) * BounceHeight * texture.Height;
         }
 
-        public void OnCollected(Player collectedBy)
+        public void OnCollected(GameObject other)
         {
-            collectedSound.Play();
-            Destroy();
+            if (other is Player)
+            {
+                Level.Score += PointValue;
+                collectedSound.Play();
+                trigger.Dispose();
+                Dispose();
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)

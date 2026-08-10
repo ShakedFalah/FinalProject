@@ -101,6 +101,7 @@ namespace FinalProject
             HandleInput(gameTime);
 
             GameObjectManager.Update(gameTime);
+            TriggerCollider.HandleTriggerCollisions();
 
             base.Update(gameTime);
         }

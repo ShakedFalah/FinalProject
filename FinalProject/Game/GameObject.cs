@@ -1,8 +1,9 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace Platformer2D;
 
-public class GameObject
+public class GameObject : IDisposable
 {
     public GameObject()
     {
@@ -11,7 +12,7 @@ public class GameObject
     
     public virtual void Update(GameTime gameTime) {}
 
-    public void Destroy()
+    public void Dispose()
     {
         GameObjectManager.UnregisterObject(this);
     }
