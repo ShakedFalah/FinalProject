@@ -29,7 +29,7 @@ namespace Platformer2D
         private Vector2 start;
         private Point exit = InvalidPosition;
 
-        public int Score { get; private set; }
+        public int Score { get; set; }
 
         public bool ReachedExit { get; private set; }
 
@@ -326,8 +326,8 @@ namespace Platformer2D
                 // Falling off the bottom of the level kills the player.
                 if (Player.BoundingRectangle.Top >= Height * Tile.Height)
                     Player.OnKilled(null);
-                
-                HandleTriggerCollisions();
+
+                // HandleTriggerCollisions();
             }
 
             if (TimeRemaining < TimeSpan.Zero)
@@ -342,7 +342,7 @@ namespace Platformer2D
             {
                 Gem gem = gems[i];
                 
-                if (gem.BoundingCircle.Intersects(Player.BoundingRectangle))
+                if (gem.BoundingBox.Intersects(Player.BoundingRectangle))
                 {
                     gems.RemoveAt(i--);
                     Score += gem.PointValue;
@@ -350,7 +350,6 @@ namespace Platformer2D
                     gem.OnCollected(Player);
                 }
             }
-            
             foreach (Enemy enemy in enemies)
             {
                 if (enemy.BoundingRectangle.Intersects(Player.BoundingRectangle))
@@ -388,9 +387,9 @@ namespace Platformer2D
                     if (projectile.BoundingRectangle.Intersects(enemy.BoundingRectangle))
                     {
                         playerProjectiles.RemoveAt(i);
-                        projectile.Destroy();
+                        projectile.Dispose();
                         enemies.RemoveAt(j);
-                        enemy.Destroy();
+                        enemy.Dispose();
                         i--;
                         break;
                     }

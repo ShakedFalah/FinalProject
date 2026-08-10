@@ -93,9 +93,8 @@ namespace Platformer2D
         private bool isCelebrating;
 
         private Rectangle localBounds;
-        /// <summary>
-        /// Gets a rectangle which bounds this player in world space.
-        /// </summary>
+        private TriggerCollider trigger;
+
         public Rectangle BoundingRectangle
         {
             get
@@ -110,6 +109,7 @@ namespace Platformer2D
         public Player(Level level, Vector2 position)
         {
             this.Level = level;
+            this.trigger = new TriggerCollider(this, () => BoundingRectangle);
 
             LoadContent();
 
