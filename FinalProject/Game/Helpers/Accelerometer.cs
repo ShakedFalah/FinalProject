@@ -12,7 +12,7 @@ using Microsoft.Xna.Framework;
 using System;
 #endregion
 
-namespace Platformer2D
+namespace FinalProject.Game.Helpers
 {
     /// <summary>
     /// A static encapsulation of accelerometer input to provide games with a polling-based

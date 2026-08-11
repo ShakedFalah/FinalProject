@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Platformer2D;
+namespace FinalProject.Game.Interfaces;
 
 public interface IDrawable
 {

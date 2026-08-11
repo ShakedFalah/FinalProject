@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using FinalProject.Game.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Platformer2D;
+namespace FinalProject.Game.GameObjects;
 
 public static class GameObjectManager
 {
@@ -38,7 +39,7 @@ public static class GameObjectManager
     {
         foreach (GameObject obj in gameObjects.ToArray())
         {
-            if (obj is IDrawable drawable)
+            if (obj is Interfaces.IDrawable drawable)
             {
                 drawable.Draw(spriteBatch, gameTime);
             }

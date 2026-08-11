@@ -2,10 +2,12 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Audio;
+using FinalProject.Game.Colliders;
+using Platformer2D;
 
-namespace Platformer2D
+namespace FinalProject.Game.GameObjects
 {
-    class Gem : GameObject, IDrawable
+    class Gem : GameObject, Interfaces.IDrawable
     {
         private Texture2D texture;
         private Vector2 origin;

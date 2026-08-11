@@ -1,10 +1,12 @@
+using FinalProject.Game.Colliders;
+using FinalProject.Game.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Platformer2D;
+namespace FinalProject.Game.GameObjects;
 
-public class Exit : GameObject, IDrawable
+public class Exit : GameObject, Interfaces.IDrawable
 {
     private Texture2D exitSprite;
     private TriggerCollider trigger;

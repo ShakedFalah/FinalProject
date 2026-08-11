@@ -10,7 +10,7 @@
 using System;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Platformer2D
+namespace FinalProject.Game.AnimationStuff
 {
     class Animation
     {

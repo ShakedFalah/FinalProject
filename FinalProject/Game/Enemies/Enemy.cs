@@ -1,8 +1,13 @@
 ﻿using System;
+using FinalProject.Game.AnimationStuff;
+using FinalProject.Game.Colliders;
+using FinalProject.Game.GameObjects;
+using FinalProject.Game.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Platformer2D;
 
-namespace Platformer2D
+namespace FinalProject.Game.Enemies
 {
     /// <summary>
     /// Facing direction along the X axis.
@@ -16,7 +21,7 @@ namespace Platformer2D
     /// <summary>
     /// Abstract class for enemies that move and turn around
     /// </summary>
-    abstract class Enemy : GameObject, IDrawable
+    abstract class Enemy : GameObject, Interfaces.IDrawable
     {
         public Level Level { get; }
 

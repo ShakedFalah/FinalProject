@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FinalProject.Game.Colliders;
+using FinalProject.Game.GameObjects;
+using FinalProject.Game.Helpers;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
@@ -9,7 +12,7 @@ using System.IO;
 
 namespace FinalProject
 {
-    public class PlatformerGame : Game
+    public class PlatformerGame : Microsoft.Xna.Framework.Game
     {
         // Resources for drawing.
         private readonly GraphicsDeviceManager graphics;

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Platformer2D;
+namespace FinalProject.Game.GameObjects;
 
 public class GameObject : IDisposable
 {

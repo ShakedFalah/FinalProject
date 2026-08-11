@@ -1,7 +1,9 @@
 ﻿using System;
+using FinalProject.Game.GameObjects;
 using Microsoft.Xna.Framework;
+using Platformer2D;
 
-namespace Platformer2D
+namespace FinalProject.Game.Enemies
 {
     internal class Projectile : Enemy
     {

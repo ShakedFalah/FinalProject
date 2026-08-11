@@ -1,4 +1,11 @@
 using System;
+using FinalProject.Game;
+using FinalProject.Game.AnimationStuff;
+using FinalProject.Game.Colliders;
+using FinalProject.Game.Enemies;
+using FinalProject.Game.GameObjects;
+using FinalProject.Game.Helpers;
+using FinalProject.Game.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -6,7 +13,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Platformer2D
 {
-    class Player : GameObject, IDrawable
+    class Player : GameObject, FinalProject.Game.Interfaces.IDrawable
     {
         // Animations
         private Animation idleAnimation;

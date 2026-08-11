@@ -10,7 +10,7 @@
 using System;
 using Microsoft.Xna.Framework;
 
-namespace Platformer2D
+namespace FinalProject.Game.Colliders
 {
     public static class RectangleExtensions
     {

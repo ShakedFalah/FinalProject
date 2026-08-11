@@ -1,7 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
+using Platformer2D;
 using System;
 
-namespace Platformer2D
+namespace FinalProject.Game.Enemies
 {
     /// <summary>
     /// Enemy that flies up and down.

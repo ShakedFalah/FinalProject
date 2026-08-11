@@ -1,7 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FinalProject.Game.AnimationStuff;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Platformer2D;
 
-namespace Platformer2D
+namespace FinalProject.Game.Enemies
 {
     internal class JumpingEnemy : Enemy
     {

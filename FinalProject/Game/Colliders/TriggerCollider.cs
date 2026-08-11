@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using FinalProject.Game.GameObjects;
 using Microsoft.Xna.Framework;
 
-namespace Platformer2D
+namespace FinalProject.Game.Colliders
 {
     /// <summary>
     /// This only handles trigger collisions, meaning raising an event when two rectangles intersect.

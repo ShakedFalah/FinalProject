@@ -5,10 +5,15 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Audio;
 using System.IO;
+using FinalProject.Game.Enemies;
+using FinalProject.Game.Colliders;
+using FinalProject.Game.GameObjects;
+using FinalProject.Game;
+using FinalProject.Game.Interfaces;
 
 namespace Platformer2D
 {
-    class Level : GameObject, IDrawable, IDisposable
+    class Level : GameObject, FinalProject.Game.Interfaces.IDrawable, IDisposable
     {
         // Physical structure of the level.
         private Tile[,] tiles;

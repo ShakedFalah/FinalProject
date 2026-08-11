@@ -1,7 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
+using Platformer2D;
 using System;
 
-namespace Platformer2D
+namespace FinalProject.Game.Enemies
 {
     /// <summary>
     /// Enemy that walks on platforms and turns when hitting the edge or a wall.
