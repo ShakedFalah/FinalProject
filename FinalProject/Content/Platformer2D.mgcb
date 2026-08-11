@@ -275,6 +275,12 @@
 /processorParam:Quality=Best
 /build:Sounds/Music.wma
 
+#begin Sounds/PlayerDied.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/PlayerDied.wav
+
 #begin Sounds/PlayerFall.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor

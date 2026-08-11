@@ -12,14 +12,6 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Platformer2D
 {
-    /// <summary>
-    /// Represents an animated texture.
-    /// </summary>
-    /// <remarks>
-    /// Currently, this class assumes that each frame of animation is
-    /// as wide as each animation is tall. The number of frames in the
-    /// animation are inferred from this.
-    /// </remarks>
     class Animation
     {
         public Texture2D Texture { get; }

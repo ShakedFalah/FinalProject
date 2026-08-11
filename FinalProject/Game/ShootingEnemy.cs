@@ -5,7 +5,7 @@ namespace Platformer2D
 {
     /// <summary>
     /// Enemy that walks on platforms and turns when hitting the edge or a wall.
-    /// Stops to shoot at the player if infront of him.
+    /// Stops to shoot at the player if in front of him.
     /// </summary>
     internal class ShootingEnemy : Enemy
     {
@@ -19,7 +19,7 @@ namespace Platformer2D
         }
 
         /// <summary>
-        /// Patrol on the platfrom going back and forth, stops to shoot at the player if in range.
+        /// Patrol on the platform going back and forth, stops to shoot at the player if in range.
         /// </summary>
         public override void Update(GameTime gameTime)
         {

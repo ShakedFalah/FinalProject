@@ -20,10 +20,7 @@ namespace Platformer2D
     {
         public Level Level { get; }
 
-        public Vector2 Position
-        {
-            get => position;
-        }
+        public Vector2 Position => position;
         protected Vector2 position;
 
         protected FaceDirection direction = FaceDirection.Left;
@@ -45,13 +42,9 @@ namespace Platformer2D
 
         protected Animation runAnimation;
         protected AnimationPlayer sprite;
-        protected bool isAnimationLooping = true;
+        private bool isAnimationLooping;
 
         protected virtual float MoveSpeed => 64.0f;
-
-        public bool IsWalking => Level.Player.IsAlive &&
-                !Level.ReachedExit &&
-                Level.TimeRemaining > TimeSpan.Zero;
 
         public Enemy(Level level, Vector2 position, string spriteSet, bool isAnimationLooping = true)
         {

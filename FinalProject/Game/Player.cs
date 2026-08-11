@@ -131,7 +131,7 @@ namespace Platformer2D
             int top = idleAnimation.FrameHeight - height;
             localBounds = new Rectangle(left, top, width, height);
 
-            killedSound = Level.Content.Load<SoundEffect>("Sounds/PlayerKilled");
+            killedSound = Level.Content.Load<SoundEffect>("Sounds/PlayerDied");
             jumpSound = Level.Content.Load<SoundEffect>("Sounds/PlayerJump");
             fallSound = Level.Content.Load<SoundEffect>("Sounds/PlayerFall");
         }
@@ -342,12 +342,6 @@ namespace Platformer2D
             return velocityY;
         }
 
-        /// <summary>
-        /// Detects and resolves all collisions between the player and his neighboring
-        /// tiles. When a collision is detected, the player is pushed away along one
-        /// axis to prevent overlapping. There is some special logic for the Y axis to
-        /// handle platforms which behave differently depending on direction of movement.
-        /// </summary>
         private void HandleCollisions()
         {
             // Get the player's bounding rectangle and find neighboring tiles.

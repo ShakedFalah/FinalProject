@@ -74,6 +74,7 @@ namespace Platformer2D
             using (StreamReader reader = new(fileStream))
             {
                 string line = reader.ReadLine();
+                if (line == null) throw new Exception("Empty file");
                 width = line.Length;
                 while (line != null)
                 {
